@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.home
+package com.example.kostkita_app.presentation.screens.home
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -25,13 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.domain.model.Payment
-import com.example.kostkita.domain.model.Room
-import com.example.kostkita.domain.model.Tenant
+import com.example.kostkita_app.domain.model.Payment
+import com.example.kostkita_app.domain.model.Room
+import com.example.kostkita_app.domain.model.Tenant
 import com.example.kostkita_app.presentation.navigation.KostKitaScreens
-import com.example.kostkita.presentation.screens.room.RoomViewModel
-import com.example.kostkita.presentation.screens.tenant.TenantViewModel
-import com.example.kostkita.presentation.screens.payment.PaymentViewModel
+import com.example.kostkita_app.presentation.screens.room.RoomViewModel
+import com.example.kostkita_app.presentation.screens.tenant.TenantViewModel
+import com.example.kostkita_app.presentation.screens.payment.PaymentViewModel
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -1079,8 +1079,8 @@ data class StatItem(
 )
 
 sealed class ActivityData {
-    data class Tenant(val tenant: com.example.kostkita.domain.model.Tenant) : ActivityData()
-    data class Payment(val payment: com.example.kostkita.domain.model.Payment) : ActivityData()
+    data class Tenant(val tenant: com.example.kostkita_app.domain.model.Tenant) : ActivityData()
+    data class Payment(val payment: com.example.kostkita_app.domain.model.Payment) : ActivityData()
 }
 
 data class TimelineEvent(

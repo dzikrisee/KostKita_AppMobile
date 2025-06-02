@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.tenant
+package com.example.kostkita_app.presentation.screens.tenant
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -22,8 +22,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.domain.model.Tenant
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*

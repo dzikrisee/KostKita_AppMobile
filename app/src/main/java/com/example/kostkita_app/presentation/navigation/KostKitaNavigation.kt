@@ -1,21 +1,21 @@
-package com.example.kostkita.presentation.navigation
+package com.example.kostkita_app.presentation.navigation
 
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.kostkita.presentation.screens.auth.LoginScreen
-import com.example.kostkita.presentation.screens.auth.RegisterScreen
-import com.example.kostkita.presentation.screens.auth.ForgotPasswordScreen
-import com.example.kostkita.presentation.screens.home.HomeScreen
-import com.example.kostkita.presentation.screens.profile.ProfileScreen
-import com.example.kostkita.presentation.screens.payment.PaymentListScreen
-import com.example.kostkita.presentation.screens.payment.PaymentFormScreen
-import com.example.kostkita.presentation.screens.room.RoomListScreen
-import com.example.kostkita.presentation.screens.room.RoomFormScreen
-import com.example.kostkita.presentation.screens.tenant.TenantListScreen
-import com.example.kostkita.presentation.screens.tenant.TenantFormScreen
+import com.example.kostkita_app.presentation.screens.auth.LoginScreen
+import com.example.kostkita_app.presentation.screens.auth.RegisterScreen
+import com.example.kostkita_app.presentation.screens.auth.ForgotPasswordScreen
+import com.example.kostkita_app.presentation.screens.home.HomeScreen
+import com.example.kostkita_app.presentation.screens.profile.ProfileScreen
+import com.example.kostkita_app.presentation.screens.payment.PaymentListScreen
+import com.example.kostkita_app.presentation.screens.payment.PaymentFormScreen
+import com.example.kostkita_app.presentation.screens.room.RoomListScreen
+import com.example.kostkita_app.presentation.screens.room.RoomFormScreen
+import com.example.kostkita_app.presentation.screens.tenant.TenantListScreen
+import com.example.kostkita_app.presentation.screens.tenant.TenantFormScreen
 import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 
 @Composable

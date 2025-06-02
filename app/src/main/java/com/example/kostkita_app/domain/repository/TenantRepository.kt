@@ -1,15 +1,14 @@
-package com.example.kostkita.domain.repository
+package com.example.kostkita_app.domain.repository
 
-import com.example.kostkita.domain.model.Payment
+import com.example.kostkita_app.domain.model.Tenant
 import kotlinx.coroutines.flow.Flow
 
-interface PaymentRepository {
-    fun getAllPayments(): Flow<List<Payment>>
-    suspend fun getPaymentById(id: String): Payment?
-    fun getPaymentsByTenantId(tenantId: String): Flow<List<Payment>>
-    fun getPaymentsByRoomId(roomId: String): Flow<List<Payment>>
-    suspend fun insertPayment(payment: Payment)
-    suspend fun updatePayment(payment: Payment)
-    suspend fun deletePayment(payment: Payment)
+interface TenantRepository {
+    fun getAllTenants(): Flow<List<Tenant>>
+    suspend fun getTenantById(id: String): Tenant?
+    suspend fun insertTenant(tenant: Tenant)
+    suspend fun updateTenant(tenant: Tenant)
+    suspend fun deleteTenant(tenant: Tenant)
     suspend fun syncWithRemote()
 }
+

@@ -1,6 +1,6 @@
-package com.example.kostkita.domain.repository
+package com.example.kostkita_app.domain.repository
 
-import com.example.kostkita.domain.model.Room
+import com.example.kostkita_app.domain.model.Room
 import kotlinx.coroutines.flow.Flow
 
 interface RoomRepository {

@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.payment
+package com.example.kostkita_app.presentation.screens.payment
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -20,8 +20,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.presentation.screens.room.RoomViewModel
-import com.example.kostkita.presentation.screens.tenant.TenantViewModel
+import com.example.kostkita_app.presentation.screens.room.RoomViewModel
+import com.example.kostkita_app.presentation.screens.tenant.TenantViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

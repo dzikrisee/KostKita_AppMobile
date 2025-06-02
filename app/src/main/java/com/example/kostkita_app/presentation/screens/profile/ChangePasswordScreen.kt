@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.profile
+package com.example.kostkita_app.presentation.screens.profile
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background

@@ -1,7 +1,7 @@
-package com.example.kostkita.data.local.dao
+package com.example.kostkita_app.data.local.dao
 
 import androidx.room.*
-import com.example.kostkita.data.local.entity.PaymentEntity
+import com.example.kostkita_app.data.local.entity.PaymentEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

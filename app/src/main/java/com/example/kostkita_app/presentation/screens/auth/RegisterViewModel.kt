@@ -1,8 +1,8 @@
-package com.example.kostkita.presentation.screens.auth
+package com.example.kostkita_app.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kostkita.domain.repository.AuthRepository
+import com.example.kostkita_app.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +38,6 @@ class RegisterViewModel @Inject constructor(
 sealed class RegisterState {
     object Idle : RegisterState()
     object Loading : RegisterState()
-    data class Success(val user: com.example.kostkita.domain.model.User) : RegisterState()
+    data class Success(val user: com.example.kostkita_app.domain.model.User) : RegisterState()
     data class Error(val message: String) : RegisterState()
 }

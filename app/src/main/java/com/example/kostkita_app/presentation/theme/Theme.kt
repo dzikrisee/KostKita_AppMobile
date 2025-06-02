@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.theme
+package com.example.kostkita_app.presentation.theme
 
 import android.app.Activity
 import android.os.Build

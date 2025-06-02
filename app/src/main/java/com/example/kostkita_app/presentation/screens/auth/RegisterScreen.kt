@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.auth
+package com.example.kostkita_app.presentation.screens.auth
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*

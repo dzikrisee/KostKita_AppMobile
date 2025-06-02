@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.payment
+package com.example.kostkita_app.presentation.screens.payment
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,12 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.domain.model.Payment
-import com.example.kostkita.domain.model.Room
-import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.presentation.navigation.KostKitaScreens
-import com.example.kostkita.presentation.screens.room.RoomViewModel
-import com.example.kostkita.presentation.screens.tenant.TenantViewModel
+import com.example.kostkita_app.domain.model.Payment
+import com.example.kostkita_app.domain.model.Room
+import com.example.kostkita_app.domain.model.Tenant
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.presentation.screens.room.RoomViewModel
+import com.example.kostkita_app.presentation.screens.tenant.TenantViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*

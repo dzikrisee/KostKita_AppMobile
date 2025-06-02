@@ -1,4 +1,4 @@
-package com.example.kostkita.data.local.database
+package com.example.kostkita_app.data.local.database
 
 import android.annotation.SuppressLint
 import androidx.room.Database
@@ -6,12 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.kostkita.data.local.dao.PaymentDao
-import com.example.kostkita.data.local.dao.RoomDao
-import com.example.kostkita.data.local.dao.TenantDao
-import com.example.kostkita.data.local.entity.PaymentEntity
-import com.example.kostkita.data.local.entity.RoomEntity
-import com.example.kostkita.data.local.entity.TenantEntity
+import com.example.kostkita_app.data.local.dao.PaymentDao
+import com.example.kostkita_app.data.local.dao.RoomDao
+import com.example.kostkita_app.data.local.dao.TenantDao
+import com.example.kostkita_app.data.local.entity.PaymentEntity
+import com.example.kostkita_app.data.local.entity.RoomEntity
+import com.example.kostkita_app.data.local.entity.TenantEntity
 
 @Database(
     entities = [TenantEntity::class, RoomEntity::class, PaymentEntity::class],

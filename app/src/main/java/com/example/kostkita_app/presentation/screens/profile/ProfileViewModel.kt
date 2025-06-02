@@ -1,9 +1,9 @@
-package com.example.kostkita.presentation.screens.profile
+package com.example.kostkita_app.presentation.screens.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kostkita.domain.model.User
-import com.example.kostkita.domain.repository.AuthRepository
+import com.example.kostkita_app.domain.model.User
+import com.example.kostkita_app.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

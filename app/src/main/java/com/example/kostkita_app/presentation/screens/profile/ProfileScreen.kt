@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.profile
+package com.example.kostkita_app.presentation.screens.profile
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.domain.model.User
-import com.example.kostkita.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.domain.model.User
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

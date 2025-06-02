@@ -1,13 +1,13 @@
-package com.example.kostkita.di
+package com.example.kostkita_app.di
 
-import com.example.kostkita.data.repository.AuthRepositoryImpl
-import com.example.kostkita.data.repository.PaymentRepositoryImpl
-import com.example.kostkita.data.repository.RoomRepositoryImpl
-import com.example.kostkita.data.repository.TenantRepositoryImpl
-import com.example.kostkita.domain.repository.AuthRepository
-import com.example.kostkita.domain.repository.PaymentRepository
-import com.example.kostkita.domain.repository.RoomRepository
-import com.example.kostkita.domain.repository.TenantRepository
+import com.example.kostkita_app.data.repository.AuthRepositoryImpl
+import com.example.kostkita_app.data.repository.PaymentRepositoryImpl
+import com.example.kostkita_app.data.repository.RoomRepositoryImpl
+import com.example.kostkita_app.data.repository.TenantRepositoryImpl
+import com.example.kostkita_app.domain.repository.AuthRepository
+import com.example.kostkita_app.domain.repository.PaymentRepository
+import com.example.kostkita_app.domain.repository.RoomRepository
+import com.example.kostkita_app.domain.repository.TenantRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

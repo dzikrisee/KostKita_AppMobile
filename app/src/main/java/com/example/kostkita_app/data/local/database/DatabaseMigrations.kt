@@ -1,4 +1,4 @@
-package com.example.kostkita.data.local.database
+package com.example.kostkita_app.data.local.database
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase

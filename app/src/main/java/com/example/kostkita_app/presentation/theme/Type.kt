@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.theme
+package com.example.kostkita_app.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -1,10 +1,10 @@
-package com.example.kostkita.di
+package com.example.kostkita_app.di
 
 import android.content.Context
-import com.example.kostkita.data.local.dao.PaymentDao
-import com.example.kostkita.data.local.dao.RoomDao
-import com.example.kostkita.data.local.dao.TenantDao
-import com.example.kostkita.data.local.database.KostKitaDatabase
+import com.example.kostkita_app.data.local.dao.PaymentDao
+import com.example.kostkita_app.data.local.dao.RoomDao
+import com.example.kostkita_app.data.local.dao.TenantDao
+import com.example.kostkita_app.data.local.database.KostKitaDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
