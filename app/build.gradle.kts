@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.kostkita"
+    namespace = "com.example.kostkita_app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.kostkita"
+        applicationId = "com.example.kostkita_app"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
