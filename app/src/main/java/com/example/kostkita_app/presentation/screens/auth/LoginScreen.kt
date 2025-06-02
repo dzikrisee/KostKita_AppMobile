@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

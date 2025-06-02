@@ -16,6 +16,7 @@ import com.example.kostkita.presentation.screens.room.RoomListScreen
 import com.example.kostkita.presentation.screens.room.RoomFormScreen
 import com.example.kostkita.presentation.screens.tenant.TenantListScreen
 import com.example.kostkita.presentation.screens.tenant.TenantFormScreen
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 
 @Composable
 fun KostKitaNavigation(
