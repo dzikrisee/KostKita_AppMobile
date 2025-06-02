@@ -1,10 +1,10 @@
-package com.example.kostkita.data.repository
+package com.example.kostkita_app.data.repository
 
-import com.example.kostkita.data.local.dao.TenantDao
-import com.example.kostkita.data.mapper.*
-import com.example.kostkita.data.remote.api.KostKitaApiService
-import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.domain.repository.TenantRepository
+import com.example.kostkita_app.data.local.dao.TenantDao
+import com.example.kostkita_app.data.mapper.*
+import com.example.kostkita_app.data.remote.api.KostKitaApiService
+import com.example.kostkita_app.domain.model.Tenant
+import com.example.kostkita_app.domain.repository.TenantRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

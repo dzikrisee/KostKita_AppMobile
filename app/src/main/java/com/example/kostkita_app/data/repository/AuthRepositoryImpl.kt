@@ -1,10 +1,10 @@
-package com.example.kostkita.data.repository
+package com.example.kostkita_app.data.repository
 
 import android.content.Context
-import com.example.kostkita.data.remote.api.AuthApiService
-import com.example.kostkita.data.remote.dto.*
-import com.example.kostkita.domain.model.User
-import com.example.kostkita.domain.repository.AuthRepository
+import com.example.kostkita_app.data.remote.api.AuthApiService
+import com.example.kostkita_app.data.remote.dto.*
+import com.example.kostkita_app.domain.model.User
+import com.example.kostkita_app.domain.repository.AuthRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 

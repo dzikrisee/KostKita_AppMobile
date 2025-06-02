@@ -1,6 +1,6 @@
-package com.example.kostkita.data.remote.api
+package com.example.kostkita_app.data.remote.api
 
-import com.example.kostkita.data.remote.dto.*
+import com.example.kostkita_app.data.remote.dto.*
 import retrofit2.http.*
 
 interface AuthApiService {

@@ -1,4 +1,4 @@
-package com.example.kostkita.data.local.entity
+package com.example.kostkita_app.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

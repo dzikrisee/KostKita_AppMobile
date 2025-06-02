@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.screens.room
+package com.example.kostkita_app.presentation.screens.room
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

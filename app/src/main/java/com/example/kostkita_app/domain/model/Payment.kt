@@ -1,4 +1,4 @@
-package com.example.kostkita.domain.model
+package com.example.kostkita_app.domain.model
 
 data class Payment(
     val id: String,

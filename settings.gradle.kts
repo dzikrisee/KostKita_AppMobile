@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KostKita"
+rootProject.name = "KostKita-App"
 include(":app")

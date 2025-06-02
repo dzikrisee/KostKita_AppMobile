@@ -1,5 +1,5 @@
 // File: presentation/screens/tenant/TenantFormScreen.kt
-package com.example.kostkita.presentation.screens.tenant
+package com.example.kostkita_app.presentation.screens.tenant
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
@@ -21,8 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.kostkita.domain.model.Room
-import com.example.kostkita.presentation.screens.room.RoomViewModel
+import com.example.kostkita_app.domain.model.Room
+import com.example.kostkita_app.presentation.screens.room.RoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

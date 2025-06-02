@@ -1,9 +1,9 @@
-package com.example.kostkita.presentation.screens.tenant
+package com.example.kostkita_app.presentation.screens.tenant
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.domain.repository.TenantRepository
+import com.example.kostkita_app.domain.model.Tenant
+import com.example.kostkita_app.domain.repository.TenantRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

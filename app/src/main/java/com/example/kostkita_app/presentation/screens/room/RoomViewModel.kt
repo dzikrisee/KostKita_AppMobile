@@ -1,10 +1,10 @@
-package com.example.kostkita.presentation.screens.room
+package com.example.kostkita_app.presentation.screens.room
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kostkita.domain.model.Room
-import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.domain.repository.RoomRepository
+import com.example.kostkita_app.domain.model.Room
+import com.example.kostkita_app.domain.model.Tenant
+import com.example.kostkita_app.domain.repository.RoomRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

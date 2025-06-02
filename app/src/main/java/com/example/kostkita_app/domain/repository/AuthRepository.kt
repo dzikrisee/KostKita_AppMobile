@@ -1,6 +1,6 @@
-package com.example.kostkita.domain.repository
+package com.example.kostkita_app.domain.repository
 
-import com.example.kostkita.domain.model.User
+import com.example.kostkita_app.domain.model.User
 
 interface AuthRepository {
     suspend fun login(username: String, password: String): Result<User>

@@ -1,4 +1,4 @@
-package com.example.kostkita.data.remote.dto
+package com.example.kostkita_app.data.remote.dto
 
 data class PaymentDto(
     val id: String,

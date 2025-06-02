@@ -1,8 +1,8 @@
-package com.example.kostkita.di
+package com.example.kostkita_app.di
 
 import android.content.Context
-import com.example.kostkita.data.remote.api.AuthApiService
-import com.example.kostkita.data.remote.api.KostKitaApiService
+import com.example.kostkita_app.data.remote.api.AuthApiService
+import com.example.kostkita_app.data.remote.api.KostKitaApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
