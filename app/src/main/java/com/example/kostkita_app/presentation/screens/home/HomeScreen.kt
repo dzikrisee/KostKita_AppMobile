@@ -28,7 +28,7 @@ import androidx.navigation.NavController
 import com.example.kostkita.domain.model.Payment
 import com.example.kostkita.domain.model.Room
 import com.example.kostkita.domain.model.Tenant
-import com.example.kostkita.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import com.example.kostkita.presentation.screens.room.RoomViewModel
 import com.example.kostkita.presentation.screens.tenant.TenantViewModel
 import com.example.kostkita.presentation.screens.payment.PaymentViewModel

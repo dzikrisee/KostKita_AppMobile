@@ -1,4 +1,4 @@
-package com.example.kostkita.presentation.navigation
+package com.example.kostkita_app.presentation.navigation
 
 sealed class KostKitaScreens(val route: String) {
     object Login : KostKitaScreens("login")
