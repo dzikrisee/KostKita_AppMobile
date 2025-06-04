@@ -98,4 +98,16 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Splash Screen API
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Animation and Graphics
+    implementation("androidx.compose.animation:animation-graphics:1.5.15")
+
+    // Additional Compose animations
+    implementation("androidx.compose.animation:animation:1.5.15")
+
+    implementation("io.coil-kt:coil-compose:2.5.0") // Untuk loading image
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }

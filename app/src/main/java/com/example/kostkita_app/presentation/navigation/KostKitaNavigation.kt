@@ -1,22 +1,30 @@
 package com.example.kostkita_app.presentation.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.kostkita_app.R
 import com.example.kostkita_app.presentation.screens.auth.LoginScreen
 import com.example.kostkita_app.presentation.screens.auth.RegisterScreen
 import com.example.kostkita_app.presentation.screens.auth.ForgotPasswordScreen
 import com.example.kostkita_app.presentation.screens.home.HomeScreen
 import com.example.kostkita_app.presentation.screens.profile.ProfileScreen
+import com.example.kostkita_app.presentation.screens.profile.EditProfileScreen
+import com.example.kostkita_app.presentation.screens.profile.ChangePasswordScreen
 import com.example.kostkita_app.presentation.screens.payment.PaymentListScreen
 import com.example.kostkita_app.presentation.screens.payment.PaymentFormScreen
 import com.example.kostkita_app.presentation.screens.room.RoomListScreen
 import com.example.kostkita_app.presentation.screens.room.RoomFormScreen
 import com.example.kostkita_app.presentation.screens.tenant.TenantListScreen
 import com.example.kostkita_app.presentation.screens.tenant.TenantFormScreen
-import com.example.kostkita_app.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.presentation.screens.splash.SplashScreen
+import com.example.kostkita_app.presentation.screens.splash.SplashViewModel
+import com.example.kostkita_app.presentation.screens.splash.SplashState
 
 @Composable
 fun KostKitaNavigation(
@@ -24,10 +32,70 @@ fun KostKitaNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = KostKitaScreens.Login.route
+        startDestination = KostKitaScreens.Splash.route,
+        // Animasi global untuk semua transisi
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(500, easing = FastOutSlowInEasing)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -fullWidth },
+                animationSpec = tween(500, easing = FastOutSlowInEasing)
+            )
+        }
     ) {
-        // Auth Screens
-        composable(route = KostKitaScreens.Login.route) {
+        // Splash Screen
+        composable(
+            route = KostKitaScreens.Splash.route,
+            // Animasi khusus untuk splash (no enter animation)
+            enterTransition = { EnterTransition.None },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                )
+            }
+        ) {
+            val viewModel: SplashViewModel = hiltViewModel()
+            val splashState by viewModel.splashState.collectAsState()
+
+            LaunchedEffect(splashState) {
+                when (splashState) {
+                    is SplashState.Authenticated -> {
+                        navController.navigate(KostKitaScreens.Home.route) {
+                            popUpTo(KostKitaScreens.Splash.route) { inclusive = true }
+                        }
+                    }
+                    is SplashState.Unauthenticated -> {
+                        navController.navigate(KostKitaScreens.Login.route) {
+                            popUpTo(KostKitaScreens.Splash.route) { inclusive = true }
+                        }
+                    }
+                    else -> { /* Loading state, show splash */ }
+                }
+            }
+
+            SplashScreen(
+                logoResId = R.drawable.kostkita_splash,
+                onSplashComplete = {
+                    // Navigation akan ditangani oleh LaunchedEffect di atas
+                }
+            )
+        }
+
+        // Auth Screens dengan slide animation
+        composable(
+            route = KostKitaScreens.Login.route,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                )
+            }
+        ) {
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = {
@@ -38,7 +106,9 @@ fun KostKitaNavigation(
             )
         }
 
-        composable(route = KostKitaScreens.Register.route) {
+        composable(
+            route = KostKitaScreens.Register.route
+        ) {
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
@@ -53,13 +123,29 @@ fun KostKitaNavigation(
             ForgotPasswordScreen(navController = navController)
         }
 
-        // Main Screens
-        composable(route = KostKitaScreens.Home.route) {
+        // Main Screens dengan slide animation
+        composable(
+            route = KostKitaScreens.Home.route,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(500, easing = FastOutSlowInEasing)
+                )
+            }
+        ) {
             HomeScreen(navController = navController)
         }
 
         composable(route = KostKitaScreens.Profile.route) {
             ProfileScreen(navController = navController)
+        }
+
+        composable(route = KostKitaScreens.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+
+        composable(route = KostKitaScreens.ChangePassword.route) {
+            ChangePasswordScreen(navController = navController)
         }
 
         // Tenant Screens

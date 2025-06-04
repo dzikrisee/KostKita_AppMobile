@@ -1,6 +1,7 @@
 package com.example.kostkita_app.presentation.navigation
 
 sealed class KostKitaScreens(val route: String) {
+    object Splash : KostKitaScreens("splash")
     object Login : KostKitaScreens("login")
     object Register : KostKitaScreens("register")
     object ForgotPassword : KostKitaScreens("forgot_password")

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,17 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Modern Color Palette - matching the splash screen
+private val PrimaryColor = Color(0xFFB8A491) // Soft beige from splash
+private val SecondaryColor = Color(0xFFF5B041) // Warm orange
+private val AccentColor = Color(0xFF8B7355) // Darker beige
+private val SurfaceColor = Color(0xFFFAF8F5) // Light cream
+private val OnSurfaceColor = Color(0xFF3C3C3C) // Dark gray
+private val SuccessColor = Color(0xFF27AE60) // Fresh green
+private val WarningColor = Color(0xFFF39C12) // Warm orange
+private val ErrorColor = Color(0xFFE74C3C) // Soft red
+private val InfoColor = Color(0xFF3498DB) // Sky blue
+
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -52,12 +64,20 @@ fun HomeScreen(
     val tabs = listOf("Dashboard", "Statistik", "Aktivitas")
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = SurfaceColor
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryColor.copy(alpha = 0.05f),
+                            SurfaceColor,
+                            Color.White
+                        )
+                    )
+                )
         ) {
             LazyColumn(
                 modifier = Modifier
@@ -67,7 +87,7 @@ fun HomeScreen(
             ) {
                 // Header Section
                 item {
-                    AnimatedHeaderSection(
+                    ModernHeaderSection(
                         onProfileClick = {
                             navController.navigate(KostKitaScreens.Profile.route)
                         }
@@ -76,34 +96,18 @@ fun HomeScreen(
 
                 // Tab Row
                 item {
-                    ScrollableTabRow(
-                        selectedTabIndex = selectedTab,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        edgePadding = 16.dp,
-                        containerColor = Color.Transparent,
-                        divider = {}
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            ) {
-                                AnimatedTabItem(
-                                    title = title,
-                                    isSelected = selectedTab == index
-                                )
-                            }
-                        }
-                    }
+                    ModernTabRow(
+                        tabs = tabs,
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
                 }
 
                 // Content based on selected tab
                 when (selectedTab) {
                     0 -> {
-                        // Dashboard Content
                         item {
-                            AnimatedStatsGrid(
+                            ModernStatsGrid(
                                 totalTenants = tenants.size,
                                 occupiedRooms = rooms.count { it.statusKamar.lowercase() == "terisi" },
                                 totalRooms = rooms.size,
@@ -112,33 +116,31 @@ fun HomeScreen(
                         }
 
                         item {
-                            FloatingQuickActions(navController)
+                            ModernQuickActions(navController)
                         }
 
                         item {
-                            LiveActivityFeed(
+                            ModernActivityFeed(
                                 tenants = tenants.takeLast(5),
                                 payments = payments.takeLast(5)
                             )
                         }
                     }
                     1 -> {
-                        // Statistics Content
                         item {
-                            ChartSection(rooms)
+                            ModernChartSection(rooms)
                         }
                     }
                     2 -> {
-                        // Activity Timeline
                         item {
-                            ActivityTimeline(tenants, payments)
+                            ModernActivityTimeline(tenants, payments)
                         }
                     }
                 }
             }
 
-            // Floating Navigation Bar
-            FloatingBottomNavigation(
+            // Modern Floating Navigation Bar
+            ModernBottomNavigation(
                 navController = navController,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -147,7 +149,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun AnimatedHeaderSection(onProfileClick: () -> Unit = {}) {
+fun ModernHeaderSection(onProfileClick: () -> Unit = {}) {
     var visible by remember { mutableStateOf(false) }
     val greeting = getGreeting()
 
@@ -159,44 +161,53 @@ fun AnimatedHeaderSection(onProfileClick: () -> Unit = {}) {
         visible = visible,
         enter = slideInVertically() + fadeIn()
     ) {
-        Column(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(20.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = greeting,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = AccentColor,
+                        fontWeight = FontWeight.Medium
                     )
-                    ShimmeringText(
+                    Text(
                         text = "KostKita",
                         style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceColor
                     )
                     Text(
                         text = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("id", "ID")).format(Date()),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AccentColor.copy(alpha = 0.7f)
                     )
                 }
 
-                // Profile Avatar with ripple effect
+                // Modern Profile Avatar
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(56.dp)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.secondary
+                                    PrimaryColor,
+                                    SecondaryColor
                                 )
                             )
                         )
@@ -206,7 +217,8 @@ fun AnimatedHeaderSection(onProfileClick: () -> Unit = {}) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = "Profile",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
@@ -215,7 +227,46 @@ fun AnimatedHeaderSection(onProfileClick: () -> Unit = {}) {
 }
 
 @Composable
-fun AnimatedTabItem(title: String, isSelected: Boolean) {
+fun ModernTabRow(
+    tabs: List<String>,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    ScrollableTabRow(
+        selectedTabIndex = selectedTab,
+        modifier = Modifier.padding(vertical = 16.dp),
+        edgePadding = 16.dp,
+        containerColor = Color.Transparent,
+        divider = {},
+        indicator = { tabPositions ->
+            if (selectedTab < tabPositions.size) {
+                Box(
+                    modifier = Modifier
+                        .tabIndicatorOffset(tabPositions[selectedTab])
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(SecondaryColor)
+                )
+            }
+        }
+    ) {
+        tabs.forEachIndexed { index, title ->
+            Tab(
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) },
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                ModernTabItem(
+                    title = title,
+                    isSelected = selectedTab == index
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernTabItem(title: String, isSelected: Boolean) {
     val scale by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0.9f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
@@ -229,13 +280,13 @@ fun AnimatedTabItem(title: String, isSelected: Boolean) {
         Text(
             text = title,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isSelected) SecondaryColor else AccentColor
         )
     }
 }
 
 @Composable
-fun AnimatedStatsGrid(
+fun ModernStatsGrid(
     totalTenants: Int,
     occupiedRooms: Int,
     totalRooms: Int,
@@ -246,28 +297,28 @@ fun AnimatedStatsGrid(
             icon = Icons.Default.Groups,
             title = "Total Penghuni",
             value = totalTenants.toString(),
-            color = Color(0xFF6366F1),
+            color = InfoColor,
             trend = "+${(1..5).random()}%"
         ),
         StatItem(
             icon = Icons.Default.MeetingRoom,
             title = "Kamar Terisi",
             value = "$occupiedRooms/$totalRooms",
-            color = Color(0xFF8B5CF6),
+            color = SuccessColor,
             trend = "${((occupiedRooms.toFloat() / totalRooms.coerceAtLeast(1)) * 100).toInt()}%"
         ),
         StatItem(
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             title = "Pendapatan",
             value = formatRupiahCompact(monthlyIncome),
-            color = Color(0xFF10B981),
+            color = SecondaryColor,
             trend = "+12%"
         ),
         StatItem(
             icon = Icons.Default.CalendarToday,
             title = "Jatuh Tempo",
             value = "${(1..5).random()}",
-            color = Color(0xFFF59E0B),
+            color = WarningColor,
             trend = "Hari ini"
         )
     )
@@ -282,7 +333,7 @@ fun AnimatedStatsGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(stats.size) { index ->
-            AnimatedStatCard(
+            ModernStatCard(
                 stat = stats[index],
                 index = index
             )
@@ -291,7 +342,7 @@ fun AnimatedStatsGrid(
 }
 
 @Composable
-fun AnimatedStatCard(stat: StatItem, index: Int) {
+fun ModernStatCard(stat: StatItem, index: Int) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -315,8 +366,9 @@ fun AnimatedStatCard(stat: StatItem, index: Int) {
                 .height(150.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = stat.color.copy(alpha = 0.1f)
-            )
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -329,25 +381,31 @@ fun AnimatedStatCard(stat: StatItem, index: Int) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Icon(
-                        imageVector = stat.icon,
-                        contentDescription = null,
+                    Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(stat.color.copy(alpha = 0.2f))
-                            .padding(6.dp),
-                        tint = stat.color
-                    )
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(stat.color.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = stat.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = stat.color
+                        )
+                    }
 
-                    Badge(
-                        containerColor = stat.color.copy(alpha = 0.2f),
-                        contentColor = stat.color
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = stat.color.copy(alpha = 0.1f)
                     ) {
                         Text(
                             text = stat.trend,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = stat.color
                         )
                     }
                 }
@@ -357,12 +415,12 @@ fun AnimatedStatCard(stat: StatItem, index: Int) {
                         text = stat.value,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = stat.color
+                        color = OnSurfaceColor
                     )
                     Text(
                         text = stat.title,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AccentColor
                     )
                 }
             }
@@ -371,7 +429,7 @@ fun AnimatedStatCard(stat: StatItem, index: Int) {
 }
 
 @Composable
-fun FloatingQuickActions(navController: NavController) {
+fun ModernQuickActions(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -381,6 +439,7 @@ fun FloatingQuickActions(navController: NavController) {
             text = "Aksi Cepat",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
+            color = OnSurfaceColor,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -388,26 +447,29 @@ fun FloatingQuickActions(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            QuickActionButton(
+            ModernActionButton(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.PersonAdd,
                 label = "Tambah\nPenghuni",
+                color = InfoColor,
                 onClick = { navController.navigate(KostKitaScreens.TenantForm.route) },
                 delay = 0
             )
 
-            QuickActionButton(
+            ModernActionButton(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.AddHome,
                 label = "Tambah\nKamar",
+                color = SuccessColor,
                 onClick = { navController.navigate(KostKitaScreens.RoomForm.route) },
                 delay = 100
             )
 
-            QuickActionButton(
+            ModernActionButton(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Default.Receipt,
                 label = "Catat\nBayar",
+                color = SecondaryColor,
                 onClick = { navController.navigate(KostKitaScreens.PaymentForm.route) },
                 delay = 200
             )
@@ -416,10 +478,11 @@ fun FloatingQuickActions(navController: NavController) {
 }
 
 @Composable
-fun QuickActionButton(
+fun ModernActionButton(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     label: String,
+    color: Color,
     onClick: () -> Unit,
     delay: Int
 ) {
@@ -439,6 +502,9 @@ fun QuickActionButton(
             onClick = onClick,
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
@@ -446,7 +512,14 @@ fun QuickActionButton(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                color.copy(alpha = 0.1f),
+                                color.copy(alpha = 0.05f)
+                            )
+                        )
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -457,13 +530,13 @@ fun QuickActionButton(
                         imageVector = icon,
                         contentDescription = null,
                         modifier = Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = color
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = OnSurfaceColor,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium
                     )
@@ -473,11 +546,8 @@ fun QuickActionButton(
     }
 }
 
-// Rest of the composables remain the same...
-// (LiveActivityFeed, ChartSection, etc.)
-
 @Composable
-fun LiveActivityFeed(
+fun ModernActivityFeed(
     tenants: List<Tenant>,
     payments: List<Payment>
 ) {
@@ -494,7 +564,8 @@ fun LiveActivityFeed(
             Text(
                 text = "Aktivitas Terkini",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceColor
             )
 
             Row(
@@ -505,7 +576,7 @@ fun LiveActivityFeed(
                 Text(
                     text = "Live",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF10B981)
+                    color = SuccessColor
                 )
             }
         }
@@ -523,7 +594,7 @@ fun LiveActivityFeed(
             .take(5)
 
         activities.forEachIndexed { index, activity ->
-            AnimatedActivityCard(activity = activity, index = index)
+            ModernActivityCard(activity = activity, index = index)
             if (index < activities.lastIndex) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -532,7 +603,7 @@ fun LiveActivityFeed(
 }
 
 @Composable
-fun AnimatedActivityCard(activity: ActivityData, index: Int) {
+fun ModernActivityCard(activity: ActivityData, index: Int) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -551,19 +622,20 @@ fun AnimatedActivityCard(activity: ActivityData, index: Int) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             when (activity) {
-                is ActivityData.Tenant -> TenantActivityItem(activity.tenant)
-                is ActivityData.Payment -> PaymentActivityItem(activity.payment)
+                is ActivityData.Tenant -> ModernTenantActivityItem(activity.tenant)
+                is ActivityData.Payment -> ModernPaymentActivityItem(activity.payment)
             }
         }
     }
 }
 
 @Composable
-fun TenantActivityItem(tenant: Tenant) {
+fun ModernTenantActivityItem(tenant: Tenant) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -574,19 +646,12 @@ fun TenantActivityItem(tenant: Tenant) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.secondary
-                        )
-                    )
-                ),
+                .background(InfoColor.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = tenant.nama.take(2).uppercase(),
-                color = Color.White,
+                color = InfoColor,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -597,26 +662,27 @@ fun TenantActivityItem(tenant: Tenant) {
             Text(
                 text = tenant.nama,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = OnSurfaceColor
             )
             Text(
                 text = "Penghuni baru • ${formatDateRelative(tenant.tanggalMasuk)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AccentColor
             )
         }
 
         Icon(
             Icons.Default.PersonAdd,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = InfoColor,
             modifier = Modifier.size(20.dp)
         )
     }
 }
 
 @Composable
-fun PaymentActivityItem(payment: Payment) {
+fun ModernPaymentActivityItem(payment: Payment) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -628,10 +694,10 @@ fun PaymentActivityItem(payment: Payment) {
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(
-                    color = if (payment.statusPembayaran == "Lunas")
-                        Color(0xFF10B981).copy(alpha = 0.2f)
+                    if (payment.statusPembayaran == "Lunas")
+                        SuccessColor.copy(alpha = 0.2f)
                     else
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                        ErrorColor.copy(alpha = 0.2f)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -642,9 +708,9 @@ fun PaymentActivityItem(payment: Payment) {
                     Icons.Default.Schedule,
                 contentDescription = null,
                 tint = if (payment.statusPembayaran == "Lunas")
-                    Color(0xFF10B981)
+                    SuccessColor
                 else
-                    MaterialTheme.colorScheme.error
+                    ErrorColor
             )
         }
 
@@ -654,117 +720,120 @@ fun PaymentActivityItem(payment: Payment) {
             Text(
                 text = "Pembayaran ${payment.bulanTahun}",
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = OnSurfaceColor
             )
             Text(
                 text = "${formatRupiah(payment.jumlahBayar)} • ${formatDateRelative(payment.tanggalBayar)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AccentColor
             )
         }
 
-        Badge(
-            containerColor = if (payment.statusPembayaran == "Lunas")
-                Color(0xFF10B981).copy(alpha = 0.2f)
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = if (payment.statusPembayaran == "Lunas")
+                SuccessColor.copy(alpha = 0.1f)
             else
-                MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
-            contentColor = if (payment.statusPembayaran == "Lunas")
-                Color(0xFF10B981)
-            else
-                MaterialTheme.colorScheme.error
+                ErrorColor.copy(alpha = 0.1f)
         ) {
             Text(
                 text = payment.statusPembayaran,
-                fontSize = 11.sp
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                fontSize = 11.sp,
+                color = if (payment.statusPembayaran == "Lunas")
+                    SuccessColor
+                else
+                    ErrorColor
             )
         }
     }
 }
 
 @Composable
-fun ChartSection(rooms: List<Room>) {
-    Column(
+fun ModernChartSection(rooms: List<Room>) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp)
+        Column(
+            modifier = Modifier.padding(20.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Text(
+                text = "Statistik Hunian",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceColor
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val occupied = rooms.count { it.statusKamar.lowercase() == "terisi" }
+            val available = rooms.count { it.statusKamar.lowercase() == "tersedia" }
+            val maintenance = rooms.size - occupied - available
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "Statistik Hunian",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                ModernStatisticItem(
+                    label = "Terisi",
+                    value = occupied,
+                    color = SuccessColor,
+                    percentage = if (rooms.isNotEmpty()) (occupied.toFloat() / rooms.size * 100).toInt() else 0
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                ModernStatisticItem(
+                    label = "Tersedia",
+                    value = available,
+                    color = InfoColor,
+                    percentage = if (rooms.isNotEmpty()) (available.toFloat() / rooms.size * 100).toInt() else 0
+                )
+                ModernStatisticItem(
+                    label = "Maintenance",
+                    value = maintenance,
+                    color = WarningColor,
+                    percentage = if (rooms.isNotEmpty()) (maintenance.toFloat() / rooms.size * 100).toInt() else 0
+                )
+            }
 
-                val occupied = rooms.count { it.statusKamar.lowercase() == "terisi" }
-                val available = rooms.count { it.statusKamar.lowercase() == "tersedia" }
-                val maintenance = rooms.size - occupied - available
+            Spacer(modifier = Modifier.height(20.dp))
 
+            if (rooms.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(AccentColor.copy(alpha = 0.2f))
                 ) {
-                    StatisticItem(
-                        label = "Terisi",
-                        value = occupied,
-                        color = Color(0xFF10B981),
-                        percentage = if (rooms.isNotEmpty()) (occupied.toFloat() / rooms.size * 100).toInt() else 0
-                    )
-                    StatisticItem(
-                        label = "Tersedia",
-                        value = available,
-                        color = Color(0xFF3B82F6),
-                        percentage = if (rooms.isNotEmpty()) (available.toFloat() / rooms.size * 100).toInt() else 0
-                    )
-                    StatisticItem(
-                        label = "Maintenance",
-                        value = maintenance,
-                        color = Color(0xFFF59E0B),
-                        percentage = if (rooms.isNotEmpty()) (maintenance.toFloat() / rooms.size * 100).toInt() else 0
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Visual bar chart
-                if (rooms.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        if (occupied > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(occupied.toFloat())
-                                    .fillMaxHeight()
-                                    .background(Color(0xFF10B981))
-                            )
-                        }
-                        if (available > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(available.toFloat())
-                                    .fillMaxHeight()
-                                    .background(Color(0xFF3B82F6))
-                            )
-                        }
-                        if (maintenance > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(maintenance.toFloat())
-                                    .fillMaxHeight()
-                                    .background(Color(0xFFF59E0B))
-                            )
-                        }
+                    if (occupied > 0) {
+                        Box(
+                            modifier = Modifier
+                                .weight(occupied.toFloat())
+                                .fillMaxHeight()
+                                .background(SuccessColor)
+                        )
+                    }
+                    if (available > 0) {
+                        Box(
+                            modifier = Modifier
+                                .weight(available.toFloat())
+                                .fillMaxHeight()
+                                .background(InfoColor)
+                        )
+                    }
+                    if (maintenance > 0) {
+                        Box(
+                            modifier = Modifier
+                                .weight(maintenance.toFloat())
+                                .fillMaxHeight()
+                                .background(WarningColor)
+                        )
                     }
                 }
             }
@@ -773,7 +842,7 @@ fun ChartSection(rooms: List<Room>) {
 }
 
 @Composable
-fun StatisticItem(
+fun ModernStatisticItem(
     label: String,
     value: Int,
     color: Color,
@@ -796,75 +865,84 @@ fun StatisticItem(
                 color = color
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            color = OnSurfaceColor
         )
         Text(
             text = "$percentage%",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = AccentColor
         )
     }
 }
 
 @Composable
-fun ActivityTimeline(
+fun ModernActivityTimeline(
     tenants: List<Tenant>,
     payments: List<Payment>
 ) {
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Text(
-            text = "Timeline Aktivitas",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        val allActivities = buildList {
-            tenants.forEach { tenant ->
-                add(
-                    TimelineEvent(
-                        timestamp = tenant.tanggalMasuk,
-                        title = "Penghuni Baru",
-                        description = "${tenant.nama} bergabung",
-                        icon = Icons.Default.PersonAdd,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-            payments.forEach { payment ->
-                add(
-                    TimelineEvent(
-                        timestamp = payment.tanggalBayar,
-                        title = "Pembayaran",
-                        description = "${payment.bulanTahun} - ${formatRupiah(payment.jumlahBayar)}",
-                        icon = Icons.Default.AttachMoney,
-                        color = if (payment.statusPembayaran == "Lunas") Color(0xFF10B981) else MaterialTheme.colorScheme.error
-                    )
-                )
-            }
-        }.sortedByDescending { it.timestamp }.take(10)
-
-        allActivities.forEachIndexed { index, event ->
-            TimelineItem(
-                event = event,
-                isFirst = index == 0,
-                isLast = index == allActivities.lastIndex
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Timeline Aktivitas",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceColor,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            val allActivities = buildList {
+                tenants.forEach { tenant ->
+                    add(
+                        TimelineEvent(
+                            timestamp = tenant.tanggalMasuk,
+                            title = "Penghuni Baru",
+                            description = "${tenant.nama} bergabung",
+                            icon = Icons.Default.PersonAdd,
+                            color = InfoColor
+                        )
+                    )
+                }
+                payments.forEach { payment ->
+                    add(
+                        TimelineEvent(
+                            timestamp = payment.tanggalBayar,
+                            title = "Pembayaran",
+                            description = "${payment.bulanTahun} - ${formatRupiah(payment.jumlahBayar)}",
+                            icon = Icons.Default.AttachMoney,
+                            color = if (payment.statusPembayaran == "Lunas") SuccessColor else ErrorColor
+                        )
+                    )
+                }
+            }.sortedByDescending { it.timestamp }.take(5)
+
+            allActivities.forEachIndexed { index, event ->
+                ModernTimelineItem(
+                    event = event,
+                    isLast = index == allActivities.lastIndex
+                )
+            }
         }
     }
 }
 
 @Composable
-fun TimelineItem(
+fun ModernTimelineItem(
     event: TimelineEvent,
-    isFirst: Boolean,
     isLast: Boolean
 ) {
     Row(
@@ -876,18 +954,9 @@ fun TimelineItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.width(40.dp)
         ) {
-            if (!isFirst) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(20.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-            }
-
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(event.color.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
@@ -895,7 +964,7 @@ fun TimelineItem(
                 Icon(
                     imageVector = event.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(16.dp),
                     tint = event.color
                 )
             }
@@ -904,8 +973,8 @@ fun TimelineItem(
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .weight(1f)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .height(40.dp)
+                        .background(AccentColor.copy(alpha = 0.3f))
                 )
             }
         }
@@ -913,12 +982,10 @@ fun TimelineItem(
         Spacer(modifier = Modifier.width(12.dp))
 
         Card(
-            modifier = Modifier
-                .weight(1f)
-                .padding(bottom = if (!isLast) 8.dp else 0.dp),
+            modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                containerColor = SurfaceColor
             )
         ) {
             Column(
@@ -933,18 +1000,19 @@ fun TimelineItem(
                     Text(
                         text = event.title,
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = OnSurfaceColor
                     )
                     Text(
                         text = formatDateRelative(event.timestamp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AccentColor
                     )
                 }
                 Text(
                     text = event.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AccentColor
                 )
             }
         }
@@ -952,46 +1020,46 @@ fun TimelineItem(
 }
 
 @Composable
-fun FloatingBottomNavigation(
+fun ModernBottomNavigation(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .padding(16.dp)
-            .height(64.dp),
-        shape = RoundedCornerShape(32.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            .height(72.dp),
+        shape = RoundedCornerShape(36.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            NavItem(
+            ModernNavItem(
                 icon = Icons.Default.Dashboard,
                 label = "Dashboard",
                 selected = true,
                 onClick = { }
             )
-            NavItem(
+            ModernNavItem(
                 icon = Icons.Default.Person,
                 label = "Penghuni",
                 selected = false,
                 onClick = { navController.navigate(KostKitaScreens.TenantList.route) }
             )
-            NavItem(
+            ModernNavItem(
                 icon = Icons.Default.MeetingRoom,
                 label = "Kamar",
                 selected = false,
                 onClick = { navController.navigate(KostKitaScreens.RoomList.route) }
             )
-            NavItem(
+            ModernNavItem(
                 icon = Icons.Default.Receipt,
                 label = "Bayar",
                 selected = false,
@@ -1002,7 +1070,7 @@ fun FloatingBottomNavigation(
 }
 
 @Composable
-fun NavItem(
+fun ModernNavItem(
     icon: ImageVector,
     label: String,
     selected: Boolean,
@@ -1013,39 +1081,38 @@ fun NavItem(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.scale(scale)
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) SecondaryColor.copy(alpha = 0.15f) else Color.Transparent,
+        animationSpec = tween(300)
+    )
+
+    Box(
+        modifier = Modifier
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (selected) SecondaryColor else AccentColor,
+                modifier = Modifier.size(22.dp)
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (selected) SecondaryColor else AccentColor,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
             )
         }
     }
-}
-
-@Composable
-fun ShimmeringText(
-    text: String,
-    style: androidx.compose.ui.text.TextStyle,
-    fontWeight: FontWeight
-) {
-    Text(
-        text = text,
-        style = style,
-        fontWeight = fontWeight,
-        color = MaterialTheme.colorScheme.onSurface
-    )
 }
 
 @Composable
@@ -1065,7 +1132,7 @@ fun PulsingDot() {
             .size(8.dp)
             .scale(scale)
             .clip(CircleShape)
-            .background(Color(0xFF10B981))
+            .background(SuccessColor)
     )
 }
 
