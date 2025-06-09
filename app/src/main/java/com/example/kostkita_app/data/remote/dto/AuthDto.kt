@@ -19,7 +19,8 @@ data class ForgotPasswordRequest(
 data class UpdateProfileRequest(
     val username: String,
     val email: String,
-    val full_name: String
+    val full_name: String,
+    val profile_photo: String? = null // Tambahkan ini
 )
 
 data class ChangePasswordRequest(
@@ -41,5 +42,6 @@ data class UserDto(
     val username: String,
     val email: String,
     val full_name: String,
-    val role: String
+    val role: String,
+    val profile_photo: String? = null // Tambahkan ini
 )

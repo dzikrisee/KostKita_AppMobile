@@ -2,6 +2,7 @@ package com.example.kostkita_app.presentation.screens.profile
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,14 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.compose.AsyncImage
 import com.example.kostkita_app.domain.model.User
 import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +46,19 @@ fun ProfileScreen(
         if (logoutState is LogoutState.Success) {
             navController.navigate(KostKitaScreens.Login.route) {
                 popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshUserData()
+    }
+
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    LaunchedEffect(navBackStackEntry.value) {
+        navBackStackEntry.value?.let {
+            if (it.destination.route == KostKitaScreens.Profile.route) {
+                viewModel.refreshUserData()
             }
         }
     }
@@ -223,29 +242,8 @@ fun ProfileHeader(user: User) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF667EEA),
-                                Color(0xFF764BA2)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = user.fullName.split(" ").map { it.firstOrNull()?.uppercaseChar() ?: "" }
-                        .take(2).joinToString(""),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
+            // Avatar - UPDATE INI UNTUK SUPPORT FOTO
+            ProfileAvatarImage(user = user)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -285,6 +283,86 @@ fun ProfileHeader(user: User) {
                 )
             }
         }
+    }
+}
+
+// TAMBAHKAN KOMPONEN BARU INI
+@Composable
+fun ProfileAvatarImage(user: User) {
+    Box(
+        modifier = Modifier.size(100.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (!user.profilePhoto.isNullOrEmpty()) {
+            // TAMPILKAN FOTO JIKA ADA
+            AsyncImage(
+                model = user.profilePhoto,
+                contentDescription = "Profile Photo",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .border(
+                        3.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF667EEA),
+                                Color(0xFF764BA2)
+                            )
+                        ),
+                        CircleShape
+                    ),
+                contentScale = ContentScale.Crop,
+                error = @androidx.compose.runtime.Composable {
+                    // FALLBACK KE AVATAR DEFAULT JIKA FOTO GAGAL LOAD
+                    DefaultAvatar(user.fullName)
+                } as Painter?,
+                placeholder = @androidx.compose.runtime.Composable {
+                    // LOADING INDICATOR
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } as Painter?
+            )
+        } else {
+            // DEFAULT AVATAR DENGAN INITIAL
+            DefaultAvatar(user.fullName)
+        }
+    }
+}
+
+// KOMPONEN DEFAULT AVATAR
+@Composable
+fun DefaultAvatar(fullName: String) {
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(CircleShape)
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF667EEA),
+                        Color(0xFF764BA2)
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = fullName.split(" ").map { it.firstOrNull()?.uppercaseChar() ?: "" }
+                .take(2).joinToString(""),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
     }
 }
 

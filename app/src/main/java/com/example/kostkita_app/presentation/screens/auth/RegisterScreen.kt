@@ -2,9 +2,11 @@ package com.example.kostkita_app.presentation.screens.auth
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,13 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.kostkita_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,9 +49,12 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    var logoVisible by remember { mutableStateOf(false) }
     var formVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        logoVisible = true
+        kotlinx.coroutines.delay(300)
         formVisible = true
     }
 
@@ -57,15 +67,7 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF667EEA),
-                        Color(0xFF764BA2),
-                        MaterialTheme.colorScheme.surface
-                    )
-                )
-            )
+            .background(Color(0xFFF5F5F0)) // Cream background seperti HomeScreen
     ) {
         Column(
             modifier = Modifier
@@ -75,50 +77,53 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Header
+            // Welcome Header
             AnimatedVisibility(
-                visible = formVisible,
+                visible = logoVisible,
                 enter = slideInVertically { -it } + fadeIn()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(bottom = 32.dp)
                 ) {
+                    // App Logo dengan gradient orange
                     Box(
                         modifier = Modifier
                             .size(80.dp)
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(CircleShape)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF667EEA),
-                                        Color(0xFF764BA2)
+                                        Color(0xFFF59E0B),
+                                        Color(0xFFEA580C)
                                     )
                                 )
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.PersonAdd,
+                        Image(
+                            painter = painterResource(id = R.drawable.kostkita2), // Ganti dengan nama file PNG Anda
                             contentDescription = "Register",
-                            modifier = Modifier.size(40.dp),
-                            tint = Color.White
+                            modifier = Modifier.size(50.dp),
+//                            colorFilter = ColorFilter.tint(Color.White) // Opsional: untuk memberi warna putih
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Buat Akun Baru",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
                         text = "Bergabung dengan KostKita",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        text = "Buat akun baru untuk memulai",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color(0xFF6B7280),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -132,30 +137,55 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.95f)
+                        containerColor = Color.White
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Text(
+                            text = "Daftar Akun Baru ✨",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1F2937),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        Text(
+                            text = "Isi informasi di bawah untuk membuat akun",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF6B7280),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 24.dp)
+                        )
+
                         // Full Name Field
                         OutlinedTextField(
                             value = fullName,
                             onValueChange = { fullName = it },
                             label = { Text("Nama Lengkap") },
+                            placeholder = { Text("Masukkan nama lengkap") },
                             leadingIcon = {
-                                Icon(Icons.Default.Badge, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981) // Green accent
+                                )
                             },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                             enabled = registerState !is RegisterState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFF10B981),
+                                focusedLeadingIconColor = Color(0xFF10B981),
+                                focusedLabelColor = Color(0xFF10B981),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
@@ -166,16 +196,24 @@ fun RegisterScreen(
                             value = username,
                             onValueChange = { username = it },
                             label = { Text("Username") },
+                            placeholder = { Text("Masukkan username") },
                             leadingIcon = {
-                                Icon(Icons.Default.Person, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color(0xFF3B82F6) // Blue accent
+                                )
                             },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                             enabled = registerState !is RegisterState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                focusedLeadingIconColor = Color(0xFF3B82F6),
+                                focusedLabelColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
@@ -186,8 +224,13 @@ fun RegisterScreen(
                             value = email,
                             onValueChange = { email = it },
                             label = { Text("Email") },
+                            placeholder = { Text("Masukkan email") },
                             leadingIcon = {
-                                Icon(Icons.Default.Email, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Email,
+                                    contentDescription = null,
+                                    tint = Color(0xFF8B5CF6) // Purple accent
+                                )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
@@ -195,8 +238,11 @@ fun RegisterScreen(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = registerState !is RegisterState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFF8B5CF6),
+                                focusedLeadingIconColor = Color(0xFF8B5CF6),
+                                focusedLabelColor = Color(0xFF8B5CF6),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
@@ -207,15 +253,21 @@ fun RegisterScreen(
                             value = password,
                             onValueChange = { password = it },
                             label = { Text("Password") },
+                            placeholder = { Text("Masukkan password") },
                             leadingIcon = {
-                                Icon(Icons.Default.Lock, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF59E0B) // Orange accent
+                                )
                             },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         if (passwordVisible) Icons.Default.VisibilityOff
                                         else Icons.Default.Visibility,
-                                        contentDescription = "Toggle password visibility"
+                                        contentDescription = "Toggle password visibility",
+                                        tint = Color(0xFF6B7280)
                                     )
                                 }
                             },
@@ -227,8 +279,11 @@ fun RegisterScreen(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = registerState !is RegisterState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFFF59E0B),
+                                focusedLeadingIconColor = Color(0xFFF59E0B),
+                                focusedLabelColor = Color(0xFFF59E0B),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
@@ -239,15 +294,21 @@ fun RegisterScreen(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
                             label = { Text("Konfirmasi Password") },
+                            placeholder = { Text("Konfirmasi password") },
                             leadingIcon = {
-                                Icon(Icons.Default.LockReset, contentDescription = null)
+                                Icon(
+                                    Icons.Default.LockReset,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF59E0B)
+                                )
                             },
                             trailingIcon = {
                                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                                     Icon(
                                         if (confirmPasswordVisible) Icons.Default.VisibilityOff
                                         else Icons.Default.Visibility,
-                                        contentDescription = "Toggle password visibility"
+                                        contentDescription = "Toggle password visibility",
+                                        tint = Color(0xFF6B7280)
                                     )
                                 }
                             },
@@ -260,9 +321,12 @@ fun RegisterScreen(
                             enabled = registerState !is RegisterState.Loading,
                             isError = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA),
-                                errorBorderColor = Color(0xFFE53E3E)
+                                focusedBorderColor = Color(0xFFF59E0B),
+                                focusedLeadingIconColor = Color(0xFFF59E0B),
+                                focusedLabelColor = Color(0xFFF59E0B),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280),
+                                errorBorderColor = Color(0xFFDC2626)
                             )
                         )
 
@@ -277,14 +341,14 @@ fun RegisterScreen(
                                 Icon(
                                     imageVector = if (password == confirmPassword) Icons.Default.CheckCircle else Icons.Default.Error,
                                     contentDescription = null,
-                                    tint = if (password == confirmPassword) Color(0xFF38A169) else Color(0xFFE53E3E),
+                                    tint = if (password == confirmPassword) Color(0xFF10B981) else Color(0xFFDC2626),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (password == confirmPassword) "Password cocok" else "Password tidak cocok",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (password == confirmPassword) Color(0xFF38A169) else Color(0xFFE53E3E)
+                                    color = if (password == confirmPassword) Color(0xFF10B981) else Color(0xFFDC2626)
                                 )
                             }
                         }
@@ -300,27 +364,27 @@ fun RegisterScreen(
                                     .fillMaxWidth()
                                     .padding(top = 16.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFFED7D7)
+                                    containerColor = Color(0xFFFEF2F2)
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(12.dp),
+                                        .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        Icons.Default.Error,
+                                        Icons.Default.ErrorOutline,
                                         contentDescription = null,
-                                        tint = Color(0xFFE53E3E),
+                                        tint = Color(0xFFDC2626),
                                         modifier = Modifier.size(20.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Text(
                                         text = (registerState as? RegisterState.Error)?.message ?: "",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color(0xFFE53E3E)
+                                        color = Color(0xFFDC2626)
                                     )
                                 }
                             }
@@ -347,7 +411,8 @@ fun RegisterScreen(
                                     password == confirmPassword &&
                                     registerState !is RegisterState.Loading,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF667EEA)
+                                containerColor = Color(0xFF10B981), // Green button
+                                disabledContainerColor = Color(0xFF9CA3AF)
                             )
                         ) {
                             if (registerState is RegisterState.Loading) {
@@ -358,14 +423,14 @@ fun RegisterScreen(
                                 )
                             } else {
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
                                         Icons.Default.PersonAdd,
                                         contentDescription = null,
                                         modifier = Modifier.size(20.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Daftar",
                                         style = MaterialTheme.typography.titleMedium,
@@ -375,17 +440,16 @@ fun RegisterScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         // Login Link
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 "Sudah punya akun? ",
-                                color = Color(0xFF718096),
+                                color = Color(0xFF6B7280),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             TextButton(
@@ -393,7 +457,7 @@ fun RegisterScreen(
                             ) {
                                 Text(
                                     "Masuk",
-                                    color = Color(0xFF667EEA),
+                                    color = Color(0xFF3B82F6),
                                     fontWeight = FontWeight.Bold
                                 )
                             }

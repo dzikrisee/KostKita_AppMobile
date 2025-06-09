@@ -2,9 +2,11 @@ package com.example.kostkita_app.presentation.screens.auth
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,15 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.kostkita_app.presentation.navigation.KostKitaScreens
+import com.example.kostkita_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,15 +64,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF667EEA),
-                        Color(0xFF764BA2),
-                        MaterialTheme.colorScheme.surface
-                    )
-                )
-            )
+            .background(Color(0xFFF5F5F0)) // Cream background seperti HomeScreen
     ) {
         Column(
             modifier = Modifier
@@ -76,53 +74,53 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo Section
+            // Welcome Header
             AnimatedVisibility(
                 visible = logoVisible,
-                enter = scaleIn(
-                    initialScale = 0.5f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-                ) + fadeIn()
+                enter = slideInVertically { -it } + fadeIn()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 48.dp)
+                    modifier = Modifier.padding(bottom = 40.dp)
                 ) {
+                    // App Logo dengan gradient orange seperti di HomeScreen
                     Box(
                         modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(30.dp))
+                            .size(100.dp)
+                            .clip(CircleShape)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF667EEA),
-                                        Color(0xFF764BA2)
+                                        Color(0xFFF59E0B), // Orange seperti di HomeScreen
+                                        Color(0xFFEA580C)
                                     )
                                 )
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Home,
-                            contentDescription = "Logo",
+                        Image(
+                            painter = painterResource(id = R.drawable.kostkita2), // Ganti dengan nama file PNG Anda
+                            contentDescription = "Register",
                             modifier = Modifier.size(60.dp),
-                            tint = Color.White
+//                            colorFilter = ColorFilter.tint(Color.White) // Opsional: untuk memberi warna putih
                         )
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // App Name
                     Text(
                         text = "KostKita",
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color(0xFF1F2937) // Dark text
                     )
 
                     Text(
-                        text = "Kelola kost dengan mudah",
+                        text = "Kelola kost dengan mudah dan efisien",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = Color(0xFF6B7280), // Gray text
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -136,9 +134,9 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White.copy(alpha = 0.95f)
+                        containerColor = Color.White
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -147,17 +145,18 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Masuk",
-                            style = MaterialTheme.typography.headlineMedium,
+                            text = "Selamat Datang! 👋",
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2D3748),
+                            color = Color(0xFF1F2937),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
                         Text(
-                            text = "Selamat datang kembali!",
+                            text = "Masuk ke akun Anda untuk melanjutkan",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF718096),
+                            color = Color(0xFF6B7280),
+                            textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 32.dp)
                         )
 
@@ -166,35 +165,49 @@ fun LoginScreen(
                             value = username,
                             onValueChange = { username = it },
                             label = { Text("Username atau Email") },
+                            placeholder = { Text("Masukkan username") },
                             leadingIcon = {
-                                Icon(Icons.Default.Person, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = Color(0xFF3B82F6) // Blue seperti di HomeScreen
+                                )
                             },
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
                             enabled = loginState !is LoginState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                focusedLeadingIconColor = Color(0xFF3B82F6),
+                                focusedLabelColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         // Password Field
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
                             label = { Text("Password") },
+                            placeholder = { Text("Masukkan password") },
                             leadingIcon = {
-                                Icon(Icons.Default.Lock, contentDescription = null)
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = Color(0xFF3B82F6)
+                                )
                             },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         if (passwordVisible) Icons.Default.VisibilityOff
                                         else Icons.Default.Visibility,
-                                        contentDescription = "Toggle password visibility"
+                                        contentDescription = "Toggle password visibility",
+                                        tint = Color(0xFF6B7280)
                                     )
                                 }
                             },
@@ -206,8 +219,11 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = loginState !is LoginState.Loading,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF667EEA),
-                                focusedLeadingIconColor = Color(0xFF667EEA)
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                focusedLeadingIconColor = Color(0xFF3B82F6),
+                                focusedLabelColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color(0xFFE5E7EB),
+                                unfocusedLabelColor = Color(0xFF6B7280)
                             )
                         )
 
@@ -215,7 +231,7 @@ fun LoginScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 8.dp),
+                                .padding(top = 12.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
                             TextButton(
@@ -223,8 +239,9 @@ fun LoginScreen(
                             ) {
                                 Text(
                                     "Lupa Password?",
-                                    color = Color(0xFF667EEA),
-                                    style = MaterialTheme.typography.bodyMedium
+                                    color = Color(0xFF3B82F6),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -240,35 +257,35 @@ fun LoginScreen(
                                     .fillMaxWidth()
                                     .padding(top = 16.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFFED7D7)
+                                    containerColor = Color(0xFFFEF2F2) // Light red background
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(12.dp),
+                                        .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        Icons.Default.Error,
+                                        Icons.Default.ErrorOutline,
                                         contentDescription = null,
-                                        tint = Color(0xFFE53E3E),
+                                        tint = Color(0xFFDC2626), // Red error color
                                         modifier = Modifier.size(20.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Text(
                                         text = (loginState as? LoginState.Error)?.message ?: "",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color(0xFFE53E3E)
+                                        color = Color(0xFFDC2626)
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                        // Login Button
+                        // Login Button dengan gradient blue seperti di HomeScreen
                         Button(
                             onClick = {
                                 viewModel.login(username, password)
@@ -280,7 +297,8 @@ fun LoginScreen(
                             enabled = username.isNotBlank() && password.isNotBlank() &&
                                     loginState !is LoginState.Loading,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF667EEA)
+                                containerColor = Color(0xFF3B82F6), // Blue seperti di HomeScreen
+                                disabledContainerColor = Color(0xFF9CA3AF)
                             )
                         ) {
                             if (loginState is LoginState.Loading) {
@@ -291,14 +309,14 @@ fun LoginScreen(
                                 )
                             } else {
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
                                         Icons.Default.Login,
                                         contentDescription = null,
                                         modifier = Modifier.size(20.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Masuk",
                                         style = MaterialTheme.typography.titleMedium,
@@ -317,29 +335,65 @@ fun LoginScreen(
                         ) {
                             Text(
                                 "Belum punya akun? ",
-                                color = Color(0xFF718096),
+                                color = Color(0xFF6B7280),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             TextButton(
                                 onClick = { navController.navigate(KostKitaScreens.Register.route) }
                             ) {
                                 Text(
-                                    "Daftar",
-                                    color = Color(0xFF667EEA),
+                                    "Daftar Sekarang",
+                                    color = Color(0xFF3B82F6),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                        // Demo credentials
-                        Text(
-                            text = "Demo: admin / admin123",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF718096),
-                            textAlign = TextAlign.Center
-                        )
+                        // Demo Credentials Card dengan warna orange accent
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFFF7ED) // Light orange background
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Color(0xFFF59E0B) // Orange accent
+                                    )
+                                    Text(
+                                        text = "Demo Account",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFFF59E0B)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = "Username: admin\nPassword: admin123",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF92400E), // Darker orange for text
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
                     }
                 }
             }

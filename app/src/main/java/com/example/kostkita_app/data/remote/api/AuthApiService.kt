@@ -14,7 +14,10 @@ interface AuthApiService {
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): MessageResponse
 
     @PUT("auth/profile")
-    suspend fun updateProfile(@Body request: UpdateProfileRequest): LoginResponse
+    suspend fun updateProfile(
+        @Header("Authorization") authorization: String,
+        @Body request: UpdateProfileRequest
+    ): LoginResponse
 
     @PUT("auth/change-password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): MessageResponse

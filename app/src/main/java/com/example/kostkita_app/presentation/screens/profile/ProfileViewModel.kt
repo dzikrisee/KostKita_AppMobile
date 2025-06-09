@@ -1,5 +1,6 @@
 package com.example.kostkita_app.presentation.screens.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kostkita_app.domain.model.User
@@ -51,6 +52,18 @@ class ProfileViewModel @Inject constructor(
 
     fun refreshUser() {
         loadCurrentUser()
+    }
+
+    fun refreshUserData() {
+        viewModelScope.launch {
+            try {
+                val currentUser = authRepository.getCurrentUser()
+                _user.value = currentUser
+                Log.d("ProfileViewModel", "User data refreshed: ${currentUser?.username}")
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Failed to refresh user data", e)
+            }
+        }
     }
 }
 

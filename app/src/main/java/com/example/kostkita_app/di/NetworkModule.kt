@@ -1,6 +1,7 @@
 package com.example.kostkita_app.di
 
 import android.content.Context
+import android.util.Log
 import com.example.kostkita_app.data.remote.api.AuthApiService
 import com.example.kostkita_app.data.remote.api.KostKitaApiService
 import dagger.Module
@@ -25,18 +26,35 @@ object NetworkModule {
     @Singleton
     fun provideAuthInterceptor(@ApplicationContext context: Context): Interceptor {
         return Interceptor { chain ->
+            val request = chain.request()
             val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
             val token = prefs.getString("auth_token", null)
 
-            val request = if (token != null) {
-                chain.request().newBuilder()
+            Log.d("NetworkModule", "Request URL: ${request.url}")
+            Log.d("NetworkModule", "Token from prefs: $token") // Debug token
+            Log.d("NetworkModule", "Token available: ${!token.isNullOrEmpty()}")
+
+            val newRequest = if (token != null) {
+                Log.d("NetworkModule", "Adding Authorization header")
+                request.newBuilder()
                     .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
                     .build()
             } else {
-                chain.request()
+                Log.w("NetworkModule", "No token found, sending request without auth")
+                request.newBuilder()
+                    .addHeader("Content-Type", "application/json")
+                    .build()
             }
 
-            chain.proceed(request)
+            val response = chain.proceed(newRequest)
+            Log.d("NetworkModule", "Response code: ${response.code}")
+
+            if (!response.isSuccessful) {
+                Log.e("NetworkModule", "HTTP Error: ${response.code} - ${response.message}")
+            }
+
+            response
         }
     }
 

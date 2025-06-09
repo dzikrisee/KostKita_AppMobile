@@ -1,5 +1,6 @@
 package com.example.kostkita_app.presentation.screens.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kostkita_app.domain.model.User
@@ -34,18 +35,29 @@ class EditProfileViewModel @Inject constructor(
 
     fun updateProfile(user: User) {
         viewModelScope.launch {
-            _updateState.value = UpdateProfileState.Loading
+            try {
+                Log.d("EditProfileViewModel", "=== STARTING UPDATE ===")
+                Log.d("EditProfileViewModel", "User: ${user.username}")
 
-            authRepository.updateProfile(user)
-                .onSuccess { updatedUser ->
+                _updateState.value = UpdateProfileState.Loading
+                Log.d("EditProfileViewModel", "State set to Loading")
+
+                val result = authRepository.updateProfile(user)
+
+                result.onSuccess { updatedUser ->
+                    Log.d("EditProfileViewModel", "=== UPDATE SUCCESS ===")
                     _user.value = updatedUser
                     _updateState.value = UpdateProfileState.Success
-                }
-                .onFailure { exception ->
+                }.onFailure { exception ->
+                    Log.e("EditProfileViewModel", "=== UPDATE FAILED ===", exception)
                     _updateState.value = UpdateProfileState.Error(
                         exception.message ?: "Gagal memperbarui profil"
                     )
                 }
+            } catch (e: Exception) {
+                Log.e("EditProfileViewModel", "=== UNEXPECTED ERROR ===", e)
+                _updateState.value = UpdateProfileState.Error("Terjadi kesalahan tidak terduga")
+            }
         }
     }
 }
