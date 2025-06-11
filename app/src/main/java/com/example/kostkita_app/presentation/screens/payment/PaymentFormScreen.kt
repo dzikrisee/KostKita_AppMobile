@@ -1,9 +1,11 @@
 package com.example.kostkita_app.presentation.screens.payment
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +25,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.kostkita_app.presentation.screens.room.RoomViewModel
 import com.example.kostkita_app.presentation.screens.tenant.TenantViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+// Modern Color Palette - matching HomeScreen
+private val PrimaryColor = Color(0xFFB8A491)
+private val SecondaryColor = Color(0xFFF5B041)
+private val AccentColor = Color(0xFF8B7355)
+private val SurfaceColor = Color(0xFFFAF8F5)
+private val OnSurfaceColor = Color(0xFF3C3C3C)
+private val SuccessColor = Color(0xFF27AE60)
+private val WarningColor = Color(0xFFF39C12)
+private val ErrorColor = Color(0xFFE74C3C)
+private val InfoColor = Color(0xFF3498DB)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,27 +64,21 @@ fun PaymentFormScreen(
     var denda by remember { mutableStateOf(payment?.denda?.toString() ?: "0") }
 
     var expandedTenant by remember { mutableStateOf(false) }
-    var expandedRoom by remember { mutableStateOf(false) }
     var expandedStatus by remember { mutableStateOf(false) }
 
     val statusOptions = listOf("Lunas", "Belum Bayar", "Sebagian")
     val selectedTenant = tenants.find { it.id == selectedTenantId }
     val selectedRoom = rooms.find { it.id == selectedRoomId }
 
-    // Auto-fill room when tenant is selected - FIX THE LOGIC
+    // Auto-fill room when tenant is selected
     LaunchedEffect(selectedTenantId) {
         if (payment == null && selectedTenantId.isNotEmpty()) {
-            // Reset previous selections
             selectedRoomId = ""
             jumlahBayar = ""
 
-            // Find the selected tenant
             val selectedTenant = tenants.find { it.id == selectedTenantId }
             selectedTenant?.roomId?.let { roomId ->
-                // Set the correct room
                 selectedRoomId = roomId
-
-                // Find room details and set price
                 val roomDetail = rooms.find { it.id == roomId }
                 roomDetail?.let { room ->
                     jumlahBayar = room.hargaBulanan.toString()
@@ -80,22 +89,11 @@ fun PaymentFormScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = SurfaceColor,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (paymentId == null) "Tambah Pembayaran" else "Edit Pembayaran",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+            ModernFormTopBar(
+                title = if (paymentId == null) "Tambah Pembayaran" else "Edit Pembayaran",
+                onBackClick = { navController.navigateUp() }
             )
         }
     ) { paddingValues ->
@@ -105,8 +103,9 @@ fun PaymentFormScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF667EEA).copy(alpha = 0.05f),
-                            MaterialTheme.colorScheme.surface
+                            PrimaryColor.copy(alpha = 0.05f),
+                            SurfaceColor,
+                            Color.White
                         )
                     )
                 )
@@ -116,304 +115,45 @@ fun PaymentFormScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Form Header
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF667EEA).copy(alpha = 0.1f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color(0xFF667EEA),
-                                            Color(0xFF764BA2)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Receipt,
-                                contentDescription = null,
-                                modifier = Modifier.size(30.dp),
-                                tint = Color.White
-                            )
-                        }
+                // Header Section
+                ModernFormHeader(isEdit = paymentId != null)
 
-                        Column {
-                            Text(
-                                text = if (paymentId == null) "Pembayaran Baru" else "Edit Pembayaran",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Isi informasi pembayaran dengan lengkap",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
+                // Tenant Selection Section
+                ModernTenantSelection(
+                    tenants = tenants,
+                    rooms = rooms,
+                    selectedTenantId = selectedTenantId,
+                    selectedRoom = selectedRoom,
+                    expandedTenant = expandedTenant,
+                    onExpandedChange = { expandedTenant = it },
+                    onTenantSelected = { selectedTenantId = it }
+                )
 
-                // Form Fields
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        Text(
-                            text = "Informasi Pembayaran",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        // Tenant Selection
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Penghuni",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            ExposedDropdownMenuBox(
-                                expanded = expandedTenant,
-                                onExpandedChange = { expandedTenant = !expandedTenant }
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedTenant?.nama ?: "Pilih Penghuni",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    placeholder = { Text("Pilih penghuni") },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Person, contentDescription = null)
-                                    },
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTenant)
-                                    },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFF667EEA),
-                                        focusedLeadingIconColor = Color(0xFF667EEA)
-                                    )
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expandedTenant,
-                                    onDismissRequest = { expandedTenant = false }
-                                ) {
-                                    // Only show tenants that have rooms assigned
-                                    tenants.filter { it.roomId != null }.forEach { tenant ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Column {
-                                                    Text(tenant.nama, fontWeight = FontWeight.Medium)
-                                                    Text(
-                                                        "${tenant.email} • Kamar ${rooms.find { it.id == tenant.roomId }?.nomorKamar ?: "?"}",
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            },
-                                            onClick = {
-                                                selectedTenantId = tenant.id
-                                                expandedTenant = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Room Selection (Auto-filled based on tenant)
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Kamar",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-
-                            if (selectedRoom != null) {
-                                // Display selected room (read-only when auto-filled)
-                                OutlinedTextField(
-                                    value = "Kamar ${selectedRoom.nomorKamar} - ${selectedRoom.tipeKamar}",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    leadingIcon = {
-                                        Icon(Icons.Default.MeetingRoom, contentDescription = null)
-                                    },
-                                    trailingIcon = {
-                                        Icon(Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = Color(0xFF10B981))
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFF10B981),
-                                        focusedLeadingIconColor = Color(0xFF10B981)
-                                    )
-                                )
-                            } else {
-                                OutlinedTextField(
-                                    value = "Pilih penghuni terlebih dahulu",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    enabled = false,
-                                    leadingIcon = {
-                                        Icon(Icons.Default.MeetingRoom, contentDescription = null)
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                            }
-                        }
-
-                        // Month/Year Field
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Bulan/Tahun",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            OutlinedTextField(
-                                value = bulanTahun,
-                                onValueChange = { bulanTahun = it },
-                                placeholder = { Text("Contoh: Januari 2025") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.CalendarToday, contentDescription = null)
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF667EEA),
-                                    focusedLeadingIconColor = Color(0xFF667EEA)
-                                )
-                            )
-                        }
-
-                        // Amount Field (Auto-filled from room price)
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Jumlah Bayar",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            OutlinedTextField(
-                                value = jumlahBayar,
-                                onValueChange = { jumlahBayar = it.filter { char -> char.isDigit() } },
-                                placeholder = { Text("Masukkan jumlah") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.AttachMoney, contentDescription = null)
-                                },
-                                prefix = { Text("Rp ") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF667EEA),
-                                    focusedLeadingIconColor = Color(0xFF667EEA)
-                                )
-                            )
-                        }
-
-                        // Status Selection
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Status Pembayaran",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            ExposedDropdownMenuBox(
-                                expanded = expandedStatus,
-                                onExpandedChange = { expandedStatus = !expandedStatus }
-                            ) {
-                                OutlinedTextField(
-                                    value = statusPembayaran,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    leadingIcon = {
-                                        Icon(Icons.Default.CheckCircle, contentDescription = null)
-                                    },
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStatus)
-                                    },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFF667EEA),
-                                        focusedLeadingIconColor = Color(0xFF667EEA)
-                                    )
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expandedStatus,
-                                    onDismissRequest = { expandedStatus = false }
-                                ) {
-                                    statusOptions.forEach { status ->
-                                        DropdownMenuItem(
-                                            text = { Text(status) },
-                                            onClick = {
-                                                statusPembayaran = status
-                                                expandedStatus = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Fine Field
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Denda (Opsional)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            OutlinedTextField(
-                                value = denda,
-                                onValueChange = { denda = it.filter { char -> char.isDigit() } },
-                                placeholder = { Text("0") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Warning, contentDescription = null)
-                                },
-                                prefix = { Text("Rp ") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF667EEA),
-                                    focusedLeadingIconColor = Color(0xFF667EEA)
-                                )
-                            )
-                        }
-                    }
-                }
+                // Payment Details Section
+                ModernPaymentDetails(
+                    bulanTahun = bulanTahun,
+                    onBulanTahunChange = { bulanTahun = it },
+                    jumlahBayar = jumlahBayar,
+                    onJumlahBayarChange = { jumlahBayar = it.filter { char -> char.isDigit() } },
+                    statusPembayaran = statusPembayaran,
+                    statusOptions = statusOptions,
+                    expandedStatus = expandedStatus,
+                    onExpandedStatusChange = { expandedStatus = it },
+                    onStatusSelected = { statusPembayaran = it },
+                    denda = denda,
+                    onDendaChange = { denda = it.filter { char -> char.isDigit() } }
+                )
 
                 // Save Button
-                Button(
+                ModernSaveButton(
+                    enabled = selectedTenantId.isNotBlank() &&
+                            selectedRoomId.isNotBlank() &&
+                            bulanTahun.isNotBlank() &&
+                            jumlahBayar.isNotBlank(),
+                    isEdit = payment != null,
                     onClick = {
                         if (payment == null) {
                             viewModel.addPayment(
@@ -440,40 +180,585 @@ fun PaymentFormScreen(
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 if (payment == null) "Pembayaran berhasil ditambahkan"
-                                else "Pembayaran berhasil diupdate"
+                                else "Pembayaran berhasil diperbarui"
                             )
                         }
 
                         navController.navigateUp()
-                    },
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernFormTopBar(
+    title: String,
+    onBackClick: () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically() + fadeIn()
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(
+                    onClick = onBackClick,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    enabled = selectedTenantId.isNotBlank() &&
-                            selectedRoomId.isNotBlank() &&
-                            bulanTahun.isNotBlank() &&
-                            jumlahBayar.isNotBlank(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF667EEA)
-                    )
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryColor.copy(alpha = 0.1f))
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = PrimaryColor
+                    )
+                }
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernFormHeader(isEdit: Boolean) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(200)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically() + fadeIn()
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = SecondaryColor.copy(alpha = 0.1f)
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    SecondaryColor,
+                                    PrimaryColor
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Receipt,
+                        contentDescription = null,
+                        modifier = Modifier.size(30.dp),
+                        tint = Color.White
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = if (isEdit) "Edit Pembayaran" else "Pembayaran Baru",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceColor
+                    )
+                    Text(
+                        text = "Isi informasi pembayaran dengan lengkap",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AccentColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModernTenantSelection(
+    tenants: List<com.example.kostkita_app.domain.model.Tenant>,
+    rooms: List<com.example.kostkita_app.domain.model.Room>,
+    selectedTenantId: String,
+    selectedRoom: com.example.kostkita_app.domain.model.Room?,
+    expandedTenant: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onTenantSelected: (String) -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(400)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically() + fadeIn()
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = InfoColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Informasi Penghuni",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceColor
+                    )
+                }
+
+                // Tenant Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = expandedTenant,
+                    onExpandedChange = onExpandedChange
+                ) {
+                    val selectedTenant = tenants.find { it.id == selectedTenantId }
+
+                    OutlinedTextField(
+                        value = selectedTenant?.nama ?: "Pilih Penghuni",
+                        onValueChange = {},
+                        readOnly = true,
+                        placeholder = { Text("Pilih penghuni", color = AccentColor.copy(alpha = 0.7f)) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = InfoColor)
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTenant)
+                        },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = InfoColor,
+                            focusedLeadingIconColor = InfoColor,
+                            unfocusedBorderColor = AccentColor.copy(alpha = 0.3f)
+                        )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedTenant,
+                        onDismissRequest = { onExpandedChange(false) }
                     ) {
-                        Icon(
-                            if (payment == null) Icons.Default.Save else Icons.Default.Update,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = if (payment == null) "Simpan Pembayaran" else "Update Pembayaran",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        tenants.filter { it.roomId != null }.forEach { tenant ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            tenant.nama,
+                                            fontWeight = FontWeight.Medium,
+                                            color = OnSurfaceColor
+                                        )
+                                        Text(
+                                            "${tenant.email} • Kamar ${rooms.find { it.id == tenant.roomId }?.nomorKamar ?: "?"}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = AccentColor
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    onTenantSelected(tenant.id)
+                                    onExpandedChange(false)
+                                }
+                            )
+                        }
                     }
                 }
+
+                // Room Display (Auto-filled)
+                if (selectedRoom != null) {
+                    ModernSelectedRoomDisplay(room = selectedRoom)
+                } else {
+                    ModernEmptyRoomDisplay()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernSelectedRoomDisplay(room: com.example.kostkita_app.domain.model.Room) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SuccessColor.copy(alpha = 0.1f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(SuccessColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.MeetingRoom,
+                    contentDescription = null,
+                    tint = SuccessColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Kamar ${room.nomorKamar}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor
+                )
+                Text(
+                    text = "${room.tipeKamar} • Lantai ${room.lantai}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor
+                )
+                Text(
+                    text = "Rp ${String.format("%,d", room.hargaBulanan)}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = SecondaryColor
+                )
+            }
+
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = SuccessColor,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModernEmptyRoomDisplay() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = AccentColor.copy(alpha = 0.1f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(AccentColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.MeetingRoom,
+                    contentDescription = null,
+                    tint = AccentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Text(
+                text = "Pilih penghuni terlebih dahulu",
+                style = MaterialTheme.typography.bodyMedium,
+                color = AccentColor,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModernPaymentDetails(
+    bulanTahun: String,
+    onBulanTahunChange: (String) -> Unit,
+    jumlahBayar: String,
+    onJumlahBayarChange: (String) -> Unit,
+    statusPembayaran: String,
+    statusOptions: List<String>,
+    expandedStatus: Boolean,
+    onExpandedStatusChange: (Boolean) -> Unit,
+    onStatusSelected: (String) -> Unit,
+    denda: String,
+    onDendaChange: (String) -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(600)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically() + fadeIn()
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Receipt,
+                        contentDescription = null,
+                        tint = SecondaryColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Detail Pembayaran",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceColor
+                    )
+                }
+
+                // Month/Year Field
+                OutlinedTextField(
+                    value = bulanTahun,
+                    onValueChange = onBulanTahunChange,
+                    label = { Text("Bulan/Tahun", color = AccentColor) },
+                    placeholder = { Text("Contoh: Januari 2025", color = AccentColor.copy(alpha = 0.7f)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.CalendarToday, contentDescription = null, tint = SecondaryColor)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SecondaryColor,
+                        focusedLeadingIconColor = SecondaryColor,
+                        focusedLabelColor = SecondaryColor,
+                        unfocusedBorderColor = AccentColor.copy(alpha = 0.3f)
+                    )
+                )
+
+                // Amount Field
+                OutlinedTextField(
+                    value = jumlahBayar,
+                    onValueChange = onJumlahBayarChange,
+                    label = { Text("Jumlah Bayar", color = AccentColor) },
+                    placeholder = { Text("Masukkan jumlah", color = AccentColor.copy(alpha = 0.7f)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.AttachMoney, contentDescription = null, tint = SecondaryColor)
+                    },
+                    prefix = { Text("Rp ", color = SecondaryColor) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SecondaryColor,
+                        focusedLeadingIconColor = SecondaryColor,
+                        focusedLabelColor = SecondaryColor,
+                        unfocusedBorderColor = AccentColor.copy(alpha = 0.3f)
+                    )
+                )
+
+                // Status Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = expandedStatus,
+                    onExpandedChange = onExpandedStatusChange
+                ) {
+                    OutlinedTextField(
+                        value = statusPembayaran,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Status Pembayaran", color = AccentColor) },
+                        leadingIcon = {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SecondaryColor)
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStatus)
+                        },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SecondaryColor,
+                            focusedLeadingIconColor = SecondaryColor,
+                            focusedLabelColor = SecondaryColor,
+                            unfocusedBorderColor = AccentColor.copy(alpha = 0.3f)
+                        )
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedStatus,
+                        onDismissRequest = { onExpandedStatusChange(false) }
+                    ) {
+                        statusOptions.forEach { status ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        status,
+                                        color = OnSurfaceColor,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                onClick = {
+                                    onStatusSelected(status)
+                                    onExpandedStatusChange(false)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Fine Field
+                OutlinedTextField(
+                    value = denda,
+                    onValueChange = onDendaChange,
+                    label = { Text("Denda (Opsional)", color = AccentColor) },
+                    placeholder = { Text("0", color = AccentColor.copy(alpha = 0.7f)) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = WarningColor)
+                    },
+                    prefix = { Text("Rp ", color = WarningColor) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = WarningColor,
+                        focusedLeadingIconColor = WarningColor,
+                        focusedLabelColor = WarningColor,
+                        unfocusedBorderColor = AccentColor.copy(alpha = 0.3f)
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernSaveButton(
+    enabled: Boolean,
+    isEdit: Boolean,
+    onClick: () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(800)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically() + fadeIn()
+    ) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = enabled,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = SecondaryColor,
+                disabledContainerColor = AccentColor.copy(alpha = 0.3f)
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 12.dp
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    if (isEdit) Icons.Default.Update else Icons.Default.Save,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.White
+                )
+                Text(
+                    text = if (isEdit) "Perbarui Pembayaran" else "Simpan Pembayaran",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
     }

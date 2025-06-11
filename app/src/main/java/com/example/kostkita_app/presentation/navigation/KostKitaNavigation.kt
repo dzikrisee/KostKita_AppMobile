@@ -14,6 +14,7 @@ import com.example.kostkita_app.presentation.screens.auth.RegisterScreen
 import com.example.kostkita_app.presentation.screens.auth.ForgotPasswordScreen
 import com.example.kostkita_app.presentation.screens.home.HomeScreen
 import com.example.kostkita_app.presentation.screens.profile.ProfileScreen
+import com.example.kostkita_app.presentation.screens.profile.ProfileViewModel
 import com.example.kostkita_app.presentation.screens.profile.EditProfileScreen
 import com.example.kostkita_app.presentation.screens.profile.ChangePasswordScreen
 import com.example.kostkita_app.presentation.screens.payment.PaymentListScreen
@@ -33,7 +34,6 @@ fun KostKitaNavigation(
     NavHost(
         navController = navController,
         startDestination = KostKitaScreens.Splash.route,
-        // Animasi global untuk semua transisi
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> fullWidth },
@@ -50,7 +50,6 @@ fun KostKitaNavigation(
         // Splash Screen
         composable(
             route = KostKitaScreens.Splash.route,
-            // Animasi khusus untuk splash (no enter animation)
             enterTransition = { EnterTransition.None },
             exitTransition = {
                 slideOutHorizontally(
@@ -74,28 +73,20 @@ fun KostKitaNavigation(
                             popUpTo(KostKitaScreens.Splash.route) { inclusive = true }
                         }
                     }
-                    else -> { /* Loading state, show splash */ }
+                    else -> { /* Loading state */ }
                 }
             }
 
             SplashScreen(
                 logoResId = R.drawable.kostkita_splash,
                 onSplashComplete = {
-                    // Navigation akan ditangani oleh LaunchedEffect di atas
+                    // Navigation handled by LaunchedEffect above
                 }
             )
         }
 
-        // Auth Screens dengan slide animation
-        composable(
-            route = KostKitaScreens.Login.route,
-            enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(500, easing = FastOutSlowInEasing)
-                )
-            }
-        ) {
+        // Auth Screens
+        composable(route = KostKitaScreens.Login.route) {
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = {
@@ -106,9 +97,7 @@ fun KostKitaNavigation(
             )
         }
 
-        composable(
-            route = KostKitaScreens.Register.route
-        ) {
+        composable(route = KostKitaScreens.Register.route) {
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
@@ -123,21 +112,31 @@ fun KostKitaNavigation(
             ForgotPasswordScreen(navController = navController)
         }
 
-        // Main Screens dengan slide animation
-        composable(
-            route = KostKitaScreens.Home.route,
-            enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(500, easing = FastOutSlowInEasing)
-                )
-            }
-        ) {
+        // Main Screens
+        composable(route = KostKitaScreens.Home.route) {
             HomeScreen(navController = navController)
         }
 
-        composable(route = KostKitaScreens.Profile.route) {
-            ProfileScreen(navController = navController)
+        // Profile Screens with proper refresh handling
+        composable(route = KostKitaScreens.Profile.route) { backStackEntry ->
+            val viewModel: ProfileViewModel = hiltViewModel()
+
+            // Listen for profile update result
+            val savedStateHandle = backStackEntry.savedStateHandle
+            val profileUpdatedFlow = savedStateHandle.getStateFlow("profile_updated", false)
+            val profileUpdated by profileUpdatedFlow.collectAsState()
+
+            LaunchedEffect(profileUpdated) {
+                if (profileUpdated) {
+                    viewModel.forceRefreshAfterUpdate()
+                    savedStateHandle["profile_updated"] = false
+                }
+            }
+
+            ProfileScreen(
+                navController = navController,
+                viewModel = viewModel
+            )
         }
 
         composable(route = KostKitaScreens.EditProfile.route) {
@@ -158,7 +157,7 @@ fun KostKitaNavigation(
         }
 
         composable(route = "${KostKitaScreens.TenantForm.route}/{tenantId}") { backStackEntry ->
-            val tenantId = backStackEntry.arguments?.getString("tenantId")
+            val tenantId: String? = backStackEntry.arguments?.getString("tenantId")
             TenantFormScreen(
                 navController = navController,
                 tenantId = tenantId
@@ -175,7 +174,7 @@ fun KostKitaNavigation(
         }
 
         composable(route = "${KostKitaScreens.RoomForm.route}/{roomId}") { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getString("roomId")
+            val roomId: String? = backStackEntry.arguments?.getString("roomId")
             RoomFormScreen(
                 navController = navController,
                 roomId = roomId
@@ -192,7 +191,7 @@ fun KostKitaNavigation(
         }
 
         composable(route = "${KostKitaScreens.PaymentForm.route}/{paymentId}") { backStackEntry ->
-            val paymentId = backStackEntry.arguments?.getString("paymentId")
+            val paymentId: String? = backStackEntry.arguments?.getString("paymentId")
             PaymentFormScreen(
                 navController = navController,
                 paymentId = paymentId

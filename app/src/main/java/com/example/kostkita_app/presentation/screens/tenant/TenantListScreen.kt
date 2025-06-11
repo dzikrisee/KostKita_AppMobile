@@ -15,7 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,6 +28,16 @@ import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+
+// Modern Color Palette dari HomeScreen
+private val PrimaryColor = Color(0xFFB8A491)
+private val SecondaryColor = Color(0xFFF5B041)
+private val AccentColor = Color(0xFF8B7355)
+private val SurfaceColor = Color(0xFFFAF8F5)
+private val OnSurfaceColor = Color(0xFF3C3C3C)
+private val SuccessColor = Color(0xFF27AE60)
+private val WarningColor = Color(0xFFF39C12)
+private val InfoColor = Color(0xFF3498DB)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +51,15 @@ fun TenantListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var searchQuery by remember { mutableStateOf("") }
+    var headerVisible by remember { mutableStateOf(false) }
+    var contentVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        headerVisible = true
+        kotlinx.coroutines.delay(200)
+        contentVisible = true
+    }
+
     val filteredTenants = tenants.filter { tenant ->
         searchQuery.isEmpty() || tenant.nama.contains(searchQuery, ignoreCase = true) ||
                 tenant.email.contains(searchQuery, ignoreCase = true) ||
@@ -47,9 +67,10 @@ fun TenantListScreen(
     }
 
     Scaffold(
+        containerColor = SurfaceColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopBar(
+            ModernTopBar(
                 totalTenants = tenants.size,
                 onBackClick = { navController.navigateUp() },
                 onSyncClick = {
@@ -61,44 +82,76 @@ fun TenantListScreen(
             )
         },
         floatingActionButton = {
-            AddTenantFab(
+            ModernAddFab(
                 onClick = { navController.navigate(KostKitaScreens.TenantForm.route) }
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Search Bar
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                modifier = Modifier.padding(16.dp)
-            )
-
-            // Content
-            when {
-                isLoading -> LoadingContent()
-                filteredTenants.isEmpty() -> EmptyContent(
-                    hasSearch = searchQuery.isNotEmpty()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryColor.copy(alpha = 0.05f),
+                            SurfaceColor,
+                            Color.White
+                        )
+                    )
                 )
-                else -> TenantList(
-                    tenants = filteredTenants,
-                    onTenantEdit = { tenant ->
-                        navController.navigate("${KostKitaScreens.TenantForm.route}/${tenant.id}")
-                    },
-                    onTenantDelete = { tenant ->
-                        viewModel.deleteTenant(tenant)
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "${tenant.nama} telah dihapus",
-                                actionLabel = "Batalkan"
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Header Card dengan animasi
+                AnimatedVisibility(
+                    visible = headerVisible,
+                    enter = slideInVertically { -it } + fadeIn()
+                ) {
+                    ModernHeaderCard(
+                        totalTenants = tenants.size,
+                        occupiedRooms = tenants.count { it.roomId != null }
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = contentVisible,
+                    enter = slideInVertically { it } + fadeIn()
+                ) {
+                    Column {
+                        // Search Bar
+                        ModernSearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            modifier = Modifier.padding(16.dp)
+                        )
+
+                        // Content
+                        when {
+                            isLoading -> ModernLoadingContent()
+                            filteredTenants.isEmpty() -> ModernEmptyContent(
+                                hasSearch = searchQuery.isNotEmpty()
+                            )
+                            else -> ModernTenantList(
+                                tenants = filteredTenants,
+                                onTenantEdit = { tenant ->
+                                    navController.navigate("${KostKitaScreens.TenantForm.route}/${tenant.id}")
+                                },
+                                onTenantDelete = { tenant ->
+                                    viewModel.deleteTenant(tenant)
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "${tenant.nama} telah dihapus",
+                                            actionLabel = "Batalkan"
+                                        )
+                                    }
+                                }
                             )
                         }
                     }
-                )
+                }
             }
         }
     }
@@ -106,7 +159,7 @@ fun TenantListScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(
+private fun ModernTopBar(
     totalTenants: Int,
     onBackClick: () -> Unit,
     onSyncClick: () -> Unit
@@ -116,110 +169,274 @@ private fun TopBar(
             Column {
                 Text(
                     "Penghuni Kost",
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor
                 )
                 Text(
                     "$totalTenants penghuni terdaftar",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = AccentColor
                 )
             }
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = OnSurfaceColor
+                )
             }
         },
         actions = {
             IconButton(onClick = onSyncClick) {
-                Icon(Icons.Default.Refresh, contentDescription = "Sync")
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Sync",
+                    tint = OnSurfaceColor
+                )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.Transparent
         )
     )
 }
 
 @Composable
-private fun AddTenantFab(onClick: () -> Unit) {
-    ExtendedFloatingActionButton(
-        onClick = onClick,
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = Modifier.shadow(8.dp, RoundedCornerShape(16.dp))
-    ) {
-        Icon(Icons.Default.Add, contentDescription = "Add")
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Tambah Penghuni")
-    }
-}
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+private fun ModernHeaderCard(
+    totalTenants: Int,
+    occupiedRooms: Int
 ) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = { Text("Cari nama, email, atau nomor telepon...") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = "Clear")
-                }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier.fillMaxWidth()
-    )
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun EmptyContent(hasSearch: Boolean) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                imageVector = Icons.Default.PersonOff,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            ModernStatItem(
+                icon = Icons.Default.Groups,
+                value = totalTenants.toString(),
+                label = "Total Penghuni",
+                color = InfoColor
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            ModernStatItem(
+                icon = Icons.Default.Home,
+                value = occupiedRooms.toString(),
+                label = "Sudah Berkamar",
+                color = SuccessColor
+            )
 
-            Text(
-                text = if (hasSearch)
-                    "Tidak ada penghuni yang cocok dengan pencarian"
-                else "Belum ada penghuni terdaftar",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ModernStatItem(
+                icon = Icons.Default.PersonOff,
+                value = (totalTenants - occupiedRooms).toString(),
+                label = "Belum Berkamar",
+                color = WarningColor
             )
         }
     }
 }
 
 @Composable
-private fun TenantList(
+private fun ModernStatItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: String,
+    label: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(color.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = color
+            )
+        }
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = OnSurfaceColor
+        )
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = AccentColor,
+            maxLines = 2
+        )
+    }
+}
+
+@Composable
+private fun ModernAddFab(onClick: () -> Unit) {
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        containerColor = SuccessColor,
+        contentColor = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        elevation = FloatingActionButtonDefaults.elevation(
+            defaultElevation = 8.dp,
+            pressedElevation = 12.dp
+        )
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "Add")
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            "Tambah Penghuni",
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun ModernSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = {
+                Text(
+                    "Cari nama, email, atau nomor telepon...",
+                    color = AccentColor.copy(alpha = 0.7f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = AccentColor
+                )
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = "Clear",
+                            tint = AccentColor
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrimaryColor,
+                unfocusedBorderColor = AccentColor.copy(alpha = 0.3f),
+                focusedLeadingIconColor = PrimaryColor,
+                unfocusedLeadingIconColor = AccentColor,
+                focusedLabelColor = PrimaryColor,
+                unfocusedLabelColor = AccentColor
+            )
+        )
+    }
+}
+
+@Composable
+private fun ModernLoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                color = PrimaryColor,
+                strokeWidth = 3.dp
+            )
+            Text(
+                text = "Memuat data penghuni...",
+                color = AccentColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModernEmptyContent(hasSearch: Boolean) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(AccentColor.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (hasSearch) Icons.Default.SearchOff else Icons.Default.PersonOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = AccentColor.copy(alpha = 0.6f)
+                )
+            }
+
+            Text(
+                text = if (hasSearch)
+                    "Tidak ada penghuni yang cocok dengan pencarian"
+                else "Belum ada penghuni terdaftar",
+                style = MaterialTheme.typography.bodyLarge,
+                color = AccentColor,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (!hasSearch) {
+                Text(
+                    text = "Tap tombol + untuk menambah penghuni baru",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor.copy(alpha = 0.7f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernTenantList(
     tenants: List<Tenant>,
     onTenantEdit: (Tenant) -> Unit,
     onTenantDelete: (Tenant) -> Unit
@@ -233,7 +450,7 @@ private fun TenantList(
             items = tenants,
             key = { it.id }
         ) { tenant ->
-            TenantCard(
+            ModernTenantCard(
                 tenant = tenant,
                 onEdit = { onTenantEdit(tenant) },
                 onDelete = { onTenantDelete(tenant) }
@@ -244,7 +461,7 @@ private fun TenantList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TenantCard(
+private fun ModernTenantCard(
     tenant: Tenant,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -262,23 +479,26 @@ private fun TenantCard(
                 )
             ),
         onClick = { isExpanded = !isExpanded },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Main content
-            TenantCardHeader(
+            ModernTenantCardHeader(
                 tenant = tenant,
                 isExpanded = isExpanded
             )
 
-            // Expanded content
+            // Expanded content dengan animasi
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                TenantCardDetails(
+                ModernTenantCardDetails(
                     tenant = tenant,
                     onEdit = onEdit,
                     onDelete = { showDeleteDialog = true }
@@ -289,7 +509,7 @@ private fun TenantCard(
 
     // Delete confirmation dialog
     if (showDeleteDialog) {
-        DeleteConfirmationDialog(
+        ModernDeleteDialog(
             tenantName = tenant.nama,
             onConfirm = {
                 onDelete()
@@ -301,18 +521,38 @@ private fun TenantCard(
 }
 
 @Composable
-private fun TenantCardHeader(
+private fun ModernTenantCardHeader(
     tenant: Tenant,
     isExpanded: Boolean
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar
-        TenantAvatar(name = tenant.nama)
+        // Avatar dengan gradient
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            PrimaryColor,
+                            SecondaryColor
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = tenant.nama.take(2).uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -321,15 +561,16 @@ private fun TenantCardHeader(
             Text(
                 text = tenant.nama,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = OnSurfaceColor
             )
 
             Text(
                 text = tenant.email,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = AccentColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -337,129 +578,136 @@ private fun TenantCardHeader(
             Text(
                 text = tenant.phone,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = AccentColor.copy(alpha = 0.8f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        // Status Badge
-        StatusBadge(hasRoom = tenant.roomId != null)
+        Spacer(modifier = Modifier.width(12.dp))
 
-        // Expand Arrow
+        // Status Badge
+        ModernStatusBadge(hasRoom = tenant.roomId != null)
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Expand Arrow dengan animasi
         Icon(
             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
             contentDescription = if (isExpanded) "Collapse" else "Expand",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = AccentColor,
+            modifier = Modifier.rotate(
+                animateFloatAsState(
+                    targetValue = if (isExpanded) 180f else 0f,
+                    animationSpec = tween(300),
+                    label = "expand_arrow_rotation"
+                ).value
+            )
         )
     }
 }
 
 @Composable
-private fun TenantAvatar(name: String) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center
+private fun ModernStatusBadge(hasRoom: Boolean) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = if (hasRoom) SuccessColor.copy(alpha = 0.15f) else WarningColor.copy(alpha = 0.15f)
     ) {
-        Text(
-            text = name.take(2).uppercase(),
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = if (hasRoom) Icons.Default.Home else Icons.Default.HomeWork,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = if (hasRoom) SuccessColor else WarningColor
+            )
+            Text(
+                text = if (hasRoom) "Ada Kamar" else "Belum Ada Kamar",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (hasRoom) SuccessColor else WarningColor,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
 @Composable
-private fun StatusBadge(hasRoom: Boolean) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (hasRoom)
-                MaterialTheme.colorScheme.primaryContainer
-            else
-                MaterialTheme.colorScheme.secondaryContainer
-        ),
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
-        Text(
-            text = if (hasRoom) "Ada Kamar" else "Belum Ada Kamar",
-            style = MaterialTheme.typography.labelSmall,
-            color = if (hasRoom)
-                MaterialTheme.colorScheme.onPrimaryContainer
-            else
-                MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-    }
-}
-
-@Composable
-private fun TenantCardDetails(
+private fun ModernTenantCardDetails(
     tenant: Tenant,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
     ) {
         HorizontalDivider(
-            modifier = Modifier.padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+            modifier = Modifier.padding(vertical = 12.dp),
+            color = AccentColor.copy(alpha = 0.2f)
         )
 
-        // Additional Info
-        if (!tenant.nomorKamar.isNullOrEmpty()) {
-            InfoRow(
-                icon = Icons.Default.Room,
-                label = "Nomor Kamar",
-                value = tenant.nomorKamar
-            )
-        }
+        // Additional Info dengan icons
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (!tenant.nomorKamar.isNullOrEmpty()) {
+                ModernInfoRow(
+                    icon = Icons.Default.Room,
+                    label = "Nomor Kamar",
+                    value = tenant.nomorKamar,
+                    color = InfoColor
+                )
+            }
 
-        if (!tenant.tipeKamar.isNullOrEmpty()) {
-            InfoRow(
-                icon = Icons.Default.Home,
-                label = "Tipe Kamar",
-                value = tenant.tipeKamar
-            )
-        }
+            if (!tenant.tipeKamar.isNullOrEmpty()) {
+                ModernInfoRow(
+                    icon = Icons.Default.Home,
+                    label = "Tipe Kamar",
+                    value = tenant.tipeKamar,
+                    color = InfoColor
+                )
+            }
 
-        if (tenant.pekerjaan.isNotEmpty()) {
-            InfoRow(
-                icon = Icons.Default.Work,
-                label = "Pekerjaan",
-                value = tenant.pekerjaan
-            )
-        }
+            if (tenant.pekerjaan.isNotEmpty()) {
+                ModernInfoRow(
+                    icon = Icons.Default.Work,
+                    label = "Pekerjaan",
+                    value = tenant.pekerjaan,
+                    color = SecondaryColor
+                )
+            }
 
-        tenant.hargaBulanan?.let { harga ->
-            InfoRow(
-                icon = Icons.Default.AttachMoney,
-                label = "Harga Bulanan",
-                value = "Rp ${String.format("%,d", harga)}"
-            )
-        }
+            tenant.hargaBulanan?.let { harga ->
+                ModernInfoRow(
+                    icon = Icons.Default.AttachMoney,
+                    label = "Harga Bulanan",
+                    value = formatRupiah(harga),
+                    color = SuccessColor
+                )
+            }
 
-        val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
-        InfoRow(
-            icon = Icons.Default.CalendarToday,
-            label = "Tanggal Masuk",
-            value = dateFormat.format(Date(tenant.tanggalMasuk))
-        )
-
-        if (tenant.emergencyContact.isNotEmpty()) {
-            InfoRow(
-                icon = Icons.Default.ContactPhone,
-                label = "Kontak Darurat",
-                value = tenant.emergencyContact
+            val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+            ModernInfoRow(
+                icon = Icons.Default.CalendarToday,
+                label = "Tanggal Masuk",
+                value = dateFormat.format(Date(tenant.tanggalMasuk)),
+                color = PrimaryColor
             )
+
+            if (tenant.emergencyContact.isNotEmpty()) {
+                ModernInfoRow(
+                    icon = Icons.Default.ContactPhone,
+                    label = "Kontak Darurat",
+                    value = tenant.emergencyContact,
+                    color = WarningColor
+                )
+            }
         }
 
         // Action Buttons
-        ActionButtons(
+        ModernActionButtons(
             onEdit = onEdit,
             onDelete = onDelete
         )
@@ -467,10 +715,11 @@ private fun TenantCardDetails(
 }
 
 @Composable
-private fun InfoRow(
+private fun ModernInfoRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String
+    value: String,
+    color: Color
 ) {
     Row(
         modifier = Modifier
@@ -478,32 +727,41 @@ private fun InfoRow(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(color.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = color
+            )
+        }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-        Text(
-            text = "$label: ",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
-        )
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = AccentColor,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceColor
+            )
+        }
     }
 }
 
 @Composable
-private fun ActionButtons(
+private fun ModernActionButtons(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -511,13 +769,15 @@ private fun ActionButtons(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)
     ) {
-        TextButton(
+        OutlinedButton(
             onClick = onEdit,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = InfoColor
+            ),
+            border = BorderStroke(1.dp, InfoColor.copy(alpha = 0.5f))
         ) {
             Icon(
                 Icons.Default.Edit,
@@ -525,14 +785,16 @@ private fun ActionButtons(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Edit")
+            Text("Edit", fontWeight = FontWeight.Medium)
         }
 
-        TextButton(
+        OutlinedButton(
             onClick = onDelete,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.error
-            )
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color(0xFFE74C3C)
+            ),
+            border = BorderStroke(1.dp, Color(0xFFE74C3C).copy(alpha = 0.5f))
         ) {
             Icon(
                 Icons.Default.Delete,
@@ -540,37 +802,59 @@ private fun ActionButtons(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Hapus")
+            Text("Hapus", fontWeight = FontWeight.Medium)
         }
     }
 }
 
 @Composable
-private fun DeleteConfirmationDialog(
+private fun ModernDeleteDialog(
     tenantName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Konfirmasi Hapus") },
+        title = {
+            Text(
+                "Konfirmasi Hapus",
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceColor
+            )
+        },
         text = {
-            Text("Apakah Anda yakin ingin menghapus penghuni $tenantName? Tindakan ini tidak dapat dibatalkan.")
+            Text(
+                "Apakah Anda yakin ingin menghapus penghuni $tenantName? Tindakan ini tidak dapat dibatalkan.",
+                color = AccentColor
+            )
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE74C3C)
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Hapus")
+                Text("Hapus", fontWeight = FontWeight.Medium)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, AccentColor.copy(alpha = 0.5f))
+            ) {
+                Text("Batal", color = AccentColor, fontWeight = FontWeight.Medium)
             }
-        }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
     )
+}
+
+// Helper function
+private fun formatRupiah(amount: Int): String {
+    val format = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID"))
+    return format.format(amount)
 }

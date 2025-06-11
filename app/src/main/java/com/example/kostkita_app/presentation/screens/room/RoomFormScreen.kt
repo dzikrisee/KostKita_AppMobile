@@ -1,30 +1,38 @@
 package com.example.kostkita_app.presentation.screens.room
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+
+// Modern Color Palette dari HomeScreen
+private val PrimaryColor = Color(0xFFB8A491)
+private val SecondaryColor = Color(0xFFF5B041)
+private val AccentColor = Color(0xFF8B7355)
+private val SurfaceColor = Color(0xFFFAF8F5)
+private val OnSurfaceColor = Color(0xFF3C3C3C)
+private val SuccessColor = Color(0xFF27AE60)
+private val WarningColor = Color(0xFFF39C12)
+private val InfoColor = Color(0xFF3498DB)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,7 +43,9 @@ fun RoomFormScreen(
 ) {
     val rooms by viewModel.rooms.collectAsState()
     val room = rooms.find { it.id == roomId }
+    val scope = rememberCoroutineScope()
 
+    // Form states
     var nomorKamar by remember { mutableStateOf(room?.nomorKamar ?: "") }
     var tipeKamar by remember { mutableStateOf(room?.tipeKamar ?: "Standard") }
     var hargaBulanan by remember { mutableStateOf(room?.hargaBulanan?.toString() ?: "") }
@@ -43,281 +53,339 @@ fun RoomFormScreen(
     var statusKamar by remember { mutableStateOf(room?.statusKamar ?: "Tersedia") }
     var lantai by remember { mutableStateOf(room?.lantai?.toString() ?: "") }
 
-    val tipeKamarOptions = listOf("Standard", "Deluxe", "VIP")
-    val statusOptions = listOf("Tersedia", "Terisi", "Maintenance")
-
+    // Dropdown states
     var expandedTipe by remember { mutableStateOf(false) }
     var expandedStatus by remember { mutableStateOf(false) }
 
+    // Animation states
+    var headerVisible by remember { mutableStateOf(false) }
+    var formVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        headerVisible = true
+        kotlinx.coroutines.delay(200)
+        formVisible = true
+    }
+
+    val tipeKamarOptions = listOf("Standard", "Deluxe", "VIP")
+    val statusOptions = listOf("Tersedia", "Terisi", "Maintenance")
+
     Scaffold(
+        containerColor = SurfaceColor,
         topBar = {
-            TopAppBar(
-                title = { Text(if (roomId == null) "Tambah Kamar" else "Detail & Edit Kamar") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
+            ModernTopBar(
+                title = if (roomId == null) "Tambah Kamar" else "Edit Kamar",
+                onBackClick = { navController.navigateUp() }
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Detail Kamar Card (hanya tampil saat edit)
-            if (room != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            PrimaryColor.copy(alpha = 0.05f),
+                            SurfaceColor,
+                            Color.White
+                        )
                     )
+                )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Header Card dengan animasi
+                AnimatedVisibility(
+                    visible = headerVisible,
+                    enter = slideInVertically { -it } + fadeIn()
+                ) {
+                    ModernHeaderCard(
+                        title = if (roomId == null) "Kamar Baru" else "Edit Kamar",
+                        subtitle = if (room != null) "Kamar ${room.nomorKamar} - ${room.tipeKamar}"
+                        else "Tambahkan kamar baru ke sistem",
+                        icon = Icons.Default.MeetingRoom,
+                        room = room
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = formVisible,
+                    enter = slideInVertically { it } + fadeIn()
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp)
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        // Basic Information Section
+                        ModernFormSection(
+                            title = "Informasi Dasar",
+                            icon = Icons.Default.Info
                         ) {
-                            Text(
-                                text = "Kamar ${room.nomorKamar}",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            RoomFormModernTextField(
+                                value = nomorKamar,
+                                onValueChange = { nomorKamar = it },
+                                label = "Nomor Kamar",
+                                placeholder = "Contoh: 101, A1, B2",
+                                leadingIcon = Icons.Default.Room,
+                                color = InfoColor
                             )
 
-                            // Status Badge
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(
-                                        when (room.statusKamar) {
-                                            "Tersedia" -> Color(0xFF4CAF50)
-                                            "Terisi" -> Color(0xFFFF9800)
-                                            "Maintenance" -> Color(0xFFF44336)
-                                            else -> Color.Gray
-                                        }
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = room.statusKamar,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            RoomFormModernDropdownField(
+                                value = tipeKamar,
+                                label = "Tipe Kamar",
+                                options = tipeKamarOptions,
+                                expanded = expandedTipe,
+                                onExpandedChange = { expandedTipe = it },
+                                onValueChange = { tipeKamar = it },
+                                leadingIcon = Icons.Default.Star,
+                                color = InfoColor
+                            )
+
+                            RoomFormModernTextField(
+                                value = hargaBulanan,
+                                onValueChange = { hargaBulanan = it.filter { char -> char.isDigit() } },
+                                label = "Harga Bulanan",
+                                placeholder = "Masukkan harga sewa",
+                                leadingIcon = Icons.Default.AttachMoney,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                prefix = "Rp ",
+                                color = SuccessColor
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // Additional Information Section
+                        ModernFormSection(
+                            title = "Detail Kamar",
+                            icon = Icons.Default.Home
+                        ) {
+                            RoomFormModernTextField(
+                                value = lantai,
+                                onValueChange = { lantai = it.filter { char -> char.isDigit() } },
+                                label = "Lantai",
+                                placeholder = "Lantai berapa?",
+                                leadingIcon = Icons.Default.LocationOn,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                color = SecondaryColor
+                            )
 
-                        // Detail Information
-                        DetailItem(
-                            icon = Icons.Default.Star,
-                            label = "Tipe Kamar",
-                            value = room.tipeKamar
-                        )
+                            RoomFormModernDropdownField(
+                                value = statusKamar,
+                                label = "Status Kamar",
+                                options = statusOptions,
+                                expanded = expandedStatus,
+                                onExpandedChange = { expandedStatus = it },
+                                onValueChange = { statusKamar = it },
+                                leadingIcon = getStatusIcon(statusKamar),
+                                color = getStatusColor(statusKamar)
+                            )
 
-                        DetailItem(
-                            icon = Icons.Default.Person,
-                            label = "Harga Bulanan",
-                            value = "Rp ${String.format("%,d", room.hargaBulanan)}"
-                        )
-
-                        DetailItem(
-                            icon = Icons.Default.LocationOn,
-                            label = "Lantai",
-                            value = "Lantai ${room.lantai}"
-                        )
-
-                        if (room.fasilitas.isNotBlank()) {
-                            DetailItem(
-                                icon = Icons.Default.Info,
+                            RoomFormModernTextArea(
+                                value = fasilitas,
+                                onValueChange = { fasilitas = it },
                                 label = "Fasilitas",
-                                value = room.fasilitas
+                                placeholder = "AC, WiFi, Kamar Mandi Dalam, Lemari, dll",
+                                leadingIcon = Icons.Default.Inventory,
+                                color = SecondaryColor
+                            )
+                        }
+
+                        // Save Button
+                        ModernSaveButton(
+                            enabled = nomorKamar.isNotBlank() && hargaBulanan.isNotBlank() && lantai.isNotBlank(),
+                            isEdit = room != null,
+                            onClick = {
+                                scope.launch {
+                                    if (room == null) {
+                                        viewModel.addRoom(
+                                            nomorKamar = nomorKamar,
+                                            tipeKamar = tipeKamar,
+                                            hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
+                                            fasilitas = fasilitas,
+                                            statusKamar = statusKamar,
+                                            lantai = lantai.toIntOrNull() ?: 1
+                                        )
+                                    } else {
+                                        viewModel.updateRoom(
+                                            room.copy(
+                                                nomorKamar = nomorKamar,
+                                                tipeKamar = tipeKamar,
+                                                hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
+                                                fasilitas = fasilitas,
+                                                statusKamar = statusKamar,
+                                                lantai = lantai.toIntOrNull() ?: 1
+                                            )
+                                        )
+                                    }
+                                    navController.navigateUp()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModernTopBar(
+    title: String,
+    onBackClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                color = OnSurfaceColor
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = OnSurfaceColor
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+        )
+    )
+}
+
+@Composable
+private fun ModernHeaderCard(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    room: com.example.kostkita_app.domain.model.Room?
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    PrimaryColor,
+                                    SecondaryColor
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.White
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceColor
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AccentColor
+                    )
+                }
+
+                // Status Badge untuk existing room
+                room?.let { currentRoom ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = getStatusColor(currentRoom.statusKamar).copy(alpha = 0.15f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                getStatusIcon(currentRoom.statusKamar),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = getStatusColor(currentRoom.statusKamar)
+                            )
+                            Text(
+                                text = currentRoom.statusKamar,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = getStatusColor(currentRoom.statusKamar),
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
                 }
-
-                // Divider
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                )
-
-                // Form Edit Title
-                Text(
-                    text = "Edit Informasi Kamar",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
 
-            // Form Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Room details untuk existing room
+            room?.let { currentRoom ->
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = SurfaceColor
+                    )
                 ) {
-                    if (room == null) {
-                        Text(
-                            text = "Informasi Kamar Baru",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    OutlinedTextField(
-                        value = nomorKamar,
-                        onValueChange = { nomorKamar = it },
-                        label = { Text("Nomor Kamar") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    ExposedDropdownMenuBox(
-                        expanded = expandedTipe,
-                        onExpandedChange = { expandedTipe = !expandedTipe }
-                    ) {
-                        OutlinedTextField(
-                            value = tipeKamar,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Tipe Kamar") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedTipe) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedTipe,
-                            onDismissRequest = { expandedTipe = false }
-                        ) {
-                            tipeKamarOptions.forEach { tipe ->
-                                DropdownMenuItem(
-                                    text = { Text(tipe) },
-                                    onClick = {
-                                        tipeKamar = tipe
-                                        expandedTipe = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = hargaBulanan,
-                        onValueChange = { hargaBulanan = it.filter { char -> char.isDigit() } },
-                        label = { Text("Harga Bulanan") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        prefix = { Text("Rp ") }
-                    )
-
-                    OutlinedTextField(
-                        value = fasilitas,
-                        onValueChange = { fasilitas = it },
-                        label = { Text("Fasilitas") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    ExposedDropdownMenuBox(
-                        expanded = expandedStatus,
-                        onExpandedChange = { expandedStatus = !expandedStatus }
-                    ) {
-                        OutlinedTextField(
-                            value = statusKamar,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Status Kamar") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedStatus) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedStatus,
-                            onDismissRequest = { expandedStatus = false }
-                        ) {
-                            statusOptions.forEach { status ->
-                                DropdownMenuItem(
-                                    text = { Text(status) },
-                                    onClick = {
-                                        statusKamar = status
-                                        expandedStatus = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = lantai,
-                        onValueChange = { lantai = it.filter { char -> char.isDigit() } },
-                        label = { Text("Lantai") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            if (room == null) {
-                                viewModel.addRoom(
-                                    nomorKamar = nomorKamar,
-                                    tipeKamar = tipeKamar,
-                                    hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
-                                    fasilitas = fasilitas,
-                                    statusKamar = statusKamar,
-                                    lantai = lantai.toIntOrNull() ?: 1
-                                )
-                            } else {
-                                viewModel.updateRoom(
-                                    room.copy(
-                                        nomorKamar = nomorKamar,
-                                        tipeKamar = tipeKamar,
-                                        hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
-                                        fasilitas = fasilitas,
-                                        statusKamar = statusKamar,
-                                        lantai = lantai.toIntOrNull() ?: 1
-                                    )
-                                )
-                            }
-                            navController.navigateUp()
-                        },
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = nomorKamar.isNotBlank() && hargaBulanan.isNotBlank() && lantai.isNotBlank(),
-                        shape = RoundedCornerShape(12.dp)
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text(
-                            text = if (room == null) "Simpan Kamar" else "Update Kamar",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                        RoomDetailItem(
+                            icon = Icons.Default.AttachMoney,
+                            label = "Harga",
+                            value = formatRupiah(currentRoom.hargaBulanan),
+                            color = SuccessColor
+                        )
+
+                        RoomDetailItem(
+                            icon = Icons.Default.LocationOn,
+                            label = "Lantai",
+                            value = "Lantai ${currentRoom.lantai}",
+                            color = InfoColor
+                        )
+
+                        RoomDetailItem(
+                            icon = Icons.Default.Star,
+                            label = "Tipe",
+                            value = currentRoom.tipeKamar,
+                            color = SecondaryColor
                         )
                     }
                 }
@@ -327,38 +395,291 @@ fun RoomFormScreen(
 }
 
 @Composable
-private fun DetailItem(
-    icon: ImageVector,
+private fun RoomDetailItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String
+    value: String,
+    color: Color
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.size(20.dp)
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(color.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = color
+            )
+        }
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = AccentColor
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = OnSurfaceColor
+        )
+    }
+}
 
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+@Composable
+private fun ModernFormSection(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PrimaryColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = PrimaryColor
+                    )
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor
+                )
+            }
+
+            content()
+        }
+    }
+}
+
+@Composable
+private fun RoomFormModernTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    prefix: String = ""
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        leadingIcon = {
+            Icon(
+                leadingIcon,
+                contentDescription = null,
+                tint = color
+            )
+        },
+        prefix = if (prefix.isNotEmpty()) { { Text(prefix) } } else null,
+        keyboardOptions = keyboardOptions,
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = color,
+            focusedLeadingIconColor = color,
+            focusedLabelColor = color,
+            unfocusedBorderColor = AccentColor.copy(alpha = 0.3f),
+            unfocusedLabelColor = AccentColor,
+            unfocusedLeadingIconColor = AccentColor.copy(alpha = 0.7f)
+        )
+    )
+}
+
+@Composable
+private fun RoomFormModernTextArea(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        leadingIcon = {
+            Icon(
+                leadingIcon,
+                contentDescription = null,
+                tint = color
+            )
+        },
+        minLines = 3,
+        maxLines = 5,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = color,
+            focusedLeadingIconColor = color,
+            focusedLabelColor = color,
+            unfocusedBorderColor = AccentColor.copy(alpha = 0.3f),
+            unfocusedLabelColor = AccentColor,
+            unfocusedLeadingIconColor = AccentColor.copy(alpha = 0.7f)
+        )
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RoomFormModernDropdownField(
+    value: String,
+    label: String,
+    options: List<String>,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onValueChange: (String) -> Unit,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            leadingIcon = {
+                Icon(
+                    leadingIcon,
+                    contentDescription = null,
+                    tint = color
+                )
+            },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = color,
+                focusedLeadingIconColor = color,
+                focusedLabelColor = color,
+                unfocusedBorderColor = AccentColor.copy(alpha = 0.3f),
+                unfocusedLabelColor = AccentColor,
+                unfocusedLeadingIconColor = AccentColor.copy(alpha = 0.7f)
+            )
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            option,
+                            color = OnSurfaceColor
+                        )
+                    },
+                    onClick = {
+                        onValueChange(option)
+                        onExpandedChange(false)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernSaveButton(
+    enabled: Boolean,
+    isEdit: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        enabled = enabled,
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isEdit) InfoColor else SuccessColor,
+            disabledContainerColor = AccentColor.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                if (isEdit) Icons.Default.Update else Icons.Default.Save,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
             )
             Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                fontWeight = FontWeight.Medium
+                text = if (isEdit) "Update Kamar" else "Simpan Kamar",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }
 }
+
+// Helper functions
+private fun getStatusIcon(status: String): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (status.lowercase()) {
+        "tersedia" -> Icons.Default.CheckCircle
+        "terisi" -> Icons.Default.People
+        "maintenance" -> Icons.Default.Build
+        else -> Icons.Default.Info
+    }
+}
+
+private fun getStatusColor(status: String): Color {
+    return when (status.lowercase()) {
+        "tersedia" -> SuccessColor
+        "terisi" -> InfoColor
+        "maintenance" -> WarningColor
+        else -> AccentColor
+    }
+}
+

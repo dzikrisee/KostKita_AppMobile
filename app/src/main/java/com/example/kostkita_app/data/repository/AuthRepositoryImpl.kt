@@ -63,22 +63,28 @@ class AuthRepositoryImpl @Inject constructor(
                 return Result.failure(Exception("Token tidak tersedia"))
             }
 
-            Log.d("AuthRepository", "Using token: $token")
+            Log.d("AuthRepository", "=== UPDATE PROFILE WITH PHOTO ===")
+            Log.d("AuthRepository", "User: ${user.username}")
+            Log.d("AuthRepository", "Profile Photo Path: ${user.profilePhoto}")
 
             val response = authApiService.updateProfile(
-                authorization = "Bearer $token", // Manual header
+                authorization = "Bearer $token",
                 request = UpdateProfileRequest(
                     username = user.username,
                     email = user.email,
                     full_name = user.fullName,
-                    profile_photo = user.profilePhoto
+                    profile_photo = user.profilePhoto // Pastikan ini dikirim ke server
                 )
             )
 
             val updatedUser = response.user.toDomain(response.token)
+
+            // PENTING: Simpan profile photo ke SharedPreferences
             saveUserData(updatedUser)
 
-            Log.d("AuthRepository", "=== UPDATE PROFILE SUCCESS ===")
+            Log.d("AuthRepository", "=== PROFILE UPDATE SUCCESS ===")
+            Log.d("AuthRepository", "Updated Photo Path: ${updatedUser.profilePhoto}")
+
             Result.success(updatedUser)
 
         } catch (e: Exception) {
@@ -97,13 +103,13 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
-        prefs.edit().clear().apply()
+        prefs.edit().remove("auth_token").apply()
     }
 
     override suspend fun getCurrentUser(): User? {
         return try {
             val token = getToken()
-            Log.d("AuthRepository", "Getting current user, token: $token") // Debug log
+            Log.d("AuthRepository", "Getting current user, token: ${token?.take(20)}...") // Debug log
 
             if (token.isNullOrEmpty()) {
                 Log.w("AuthRepository", "No token found in getCurrentUser")
@@ -115,8 +121,15 @@ class AuthRepositoryImpl @Inject constructor(
             val email = prefs.getString("email", null) ?: return null
             val fullName = prefs.getString("full_name", null) ?: return null
             val role = prefs.getString("role", null) ?: return null
+            val profilePhoto = prefs.getString("profile_photo", null) // TAMBAHKAN INI!
 
-            User(id, username, email, fullName, role, token)
+            val user = User(id, username, email, fullName, role, token, profilePhoto)
+
+            Log.d("AuthRepository", "=== CURRENT USER LOADED ===")
+            Log.d("AuthRepository", "Username: $username")
+            Log.d("AuthRepository", "Profile Photo: $profilePhoto")
+
+            user
         } catch (e: Exception) {
             Log.e("AuthRepository", "Get current user failed", e)
             null
@@ -138,8 +151,13 @@ class AuthRepositoryImpl @Inject constructor(
             putString("email", user.email)
             putString("full_name", user.fullName)
             putString("role", user.role)
+            putString("profile_photo", user.profilePhoto) // TAMBAHKAN INI!
             apply()
         }
+
+        Log.d("AuthRepository", "=== USER DATA SAVED ===")
+        Log.d("AuthRepository", "Username: ${user.username}")
+        Log.d("AuthRepository", "Profile Photo saved: ${user.profilePhoto}")
     }
 
     private fun UserDto.toDomain(token: String): User {
@@ -150,8 +168,7 @@ class AuthRepositoryImpl @Inject constructor(
             fullName = full_name,
             role = role,
             token = token,
-            profilePhoto = profile_photo
-
+            profilePhoto = profile_photo // PASTIKAN INI ADA!
         )
     }
 }
