@@ -1,4 +1,4 @@
-package com.example.kostkita_app.ui.theme
+package com.example.kostkita_app.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
