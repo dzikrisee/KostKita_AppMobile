@@ -44,6 +44,8 @@ class SplashViewModel @Inject constructor(
     }
 }
 
+
+
 sealed class SplashState {
     object Loading : SplashState()
     object Authenticated : SplashState()

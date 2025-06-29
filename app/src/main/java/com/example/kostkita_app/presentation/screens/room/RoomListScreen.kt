@@ -391,7 +391,7 @@ private fun ModernRoomStats(rooms: List<Room>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 2.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp), // Ubah dari 2.dp ke 8.dp
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         val available = rooms.count { it.statusKamar.equals("tersedia", true) }
@@ -602,7 +602,7 @@ private fun ModernRoomContent(
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     end = 20.dp,
-                    top = 4.dp,
+                    top = 0.dp,
                     bottom = 100.dp
                 ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -625,7 +625,7 @@ private fun ModernRoomContent(
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     end = 20.dp,
-                    top = 4.dp,
+                    top = 0.dp,
                     bottom = 100.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)

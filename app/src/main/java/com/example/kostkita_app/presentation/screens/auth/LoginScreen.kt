@@ -32,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.kostkita_app.presentation.navigation.KostKitaScreens
 import com.example.kostkita_app.R
+import com.example.kostkita_app.data.remote.config.ApiConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -376,7 +377,7 @@ fun LoginScreen(
                                         tint = Color(0xFFF59E0B) // Orange accent
                                     )
                                     Text(
-                                        text = "Demo Account",
+                                        text = "Demo Account (Railway)",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                         color = Color(0xFFF59E0B)
@@ -386,12 +387,29 @@ fun LoginScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Username: admin\nPassword: admin123",
+                                    text = "Username: ${ApiConfig.DEMO_USERNAME}\nPassword: ${ApiConfig.DEMO_PASSWORD}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFF92400E), // Darker orange for text
                                     textAlign = TextAlign.Center,
                                     lineHeight = 18.sp
                                 )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                TextButton(
+                                    onClick = {
+                                        username = ApiConfig.DEMO_USERNAME
+                                        password = ApiConfig.DEMO_PASSWORD
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = Color(0xFFF59E0B)
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Use Demo Login",
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }

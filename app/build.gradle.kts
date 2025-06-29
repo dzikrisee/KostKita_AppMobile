@@ -110,4 +110,17 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.5.0") // Untuk loading image
     implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Network & API
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // JSON parsing
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Network monitoring (optional, for debugging)
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 }

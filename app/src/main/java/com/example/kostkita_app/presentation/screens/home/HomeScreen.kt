@@ -20,12 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.kostkita_app.domain.model.Payment
 import com.example.kostkita_app.domain.model.Room
 import com.example.kostkita_app.domain.model.Tenant
@@ -37,6 +39,7 @@ import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.kostkita_app.presentation.components.ProfilePhotoBox
 
 // Modern Color Palette - matching the splash screen
 private val PrimaryColor = Color(0xFFB8A491) // Soft beige from splash
@@ -199,28 +202,11 @@ fun ModernHeaderSection(onProfileClick: () -> Unit = {}) {
                 }
 
                 // Modern Profile Avatar
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    PrimaryColor,
-                                    SecondaryColor
-                                )
-                            )
-                        )
-                        .clickable { onProfileClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                ProfilePhotoBox(
+                    primaryColor = PrimaryColor,
+                    secondaryColor = SecondaryColor,
+                    onClick = { onProfileClick() }
+                )
             }
         }
     }
