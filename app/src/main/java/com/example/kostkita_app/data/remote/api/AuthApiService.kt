@@ -4,6 +4,7 @@ import com.example.kostkita_app.data.remote.dto.*
 import retrofit2.http.*
 
 interface AuthApiService {
+
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
@@ -20,5 +21,18 @@ interface AuthApiService {
     ): LoginResponse
 
     @PUT("auth/change-password")
-    suspend fun changePassword(@Body request: ChangePasswordRequest): MessageResponse
+    suspend fun changePassword(
+        @Header("Authorization") authorization: String,
+        @Body request: ChangePasswordRequest
+    ): MessageResponse
+
+    @GET("auth/profile")
+    suspend fun getProfile(
+        @Header("Authorization") authorization: String
+    ): GetProfileResponse
 }
+
+// Response untuk GET profile
+data class GetProfileResponse(
+    val user: UserDto
+)

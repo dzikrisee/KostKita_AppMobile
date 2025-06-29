@@ -2,6 +2,7 @@ package com.example.kostkita_app.presentation.screens.payment
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -55,6 +57,15 @@ fun PaymentFormScreen(
     val payment = payments.find { it.id == paymentId }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var isSaving by remember { mutableStateOf(false) }
+    var saveSuccess by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+
+    // State untuk popup dialog
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+    var isEditMode by remember { mutableStateOf(false) }
 
     var selectedTenantId by remember { mutableStateOf(payment?.tenantId ?: "") }
     var selectedRoomId by remember { mutableStateOf(payment?.roomId ?: "") }
@@ -69,6 +80,37 @@ fun PaymentFormScreen(
     val statusOptions = listOf("Lunas", "Belum Bayar", "Sebagian")
     val selectedTenant = tenants.find { it.id == selectedTenantId }
     val selectedRoom = rooms.find { it.id == selectedRoomId }
+
+    LaunchedEffect(payment) {
+        payment?.let { p ->
+            selectedTenantId = p.tenantId
+            selectedRoomId = p.roomId
+            bulanTahun = p.bulanTahun
+            jumlahBayar = p.jumlahBayar.toString()
+            statusPembayaran = p.statusPembayaran
+            denda = p.denda.toString()
+        }
+    }
+
+    // Handle success/error feedback
+    LaunchedEffect(saveSuccess, saveError) {
+        when {
+            saveSuccess -> {
+                isEditMode = payment != null
+                dialogMessage = if (payment != null) {
+                    "Pembayaran berhasil diperbarui!"
+                } else {
+                    "Pembayaran baru berhasil ditambahkan!"
+                }
+                showSuccessDialog = true
+            }
+            saveError != null -> {
+                dialogMessage = saveError ?: "Terjadi kesalahan"
+                showErrorDialog = true
+                saveError = null
+            }
+        }
+    }
 
     // Auto-fill room when tenant is selected
     LaunchedEffect(selectedTenantId) {
@@ -88,11 +130,11 @@ fun PaymentFormScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+//        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = SurfaceColor,
         topBar = {
             ModernFormTopBar(
-                title = if (paymentId == null) "Tambah Pembayaran" else "Edit Pembayaran",
+                title = if (paymentId == null) "Tambah Pembayaran" else "Detail Pembayaran",
                 onBackClick = { navController.navigateUp() }
             )
         }
@@ -110,6 +152,8 @@ fun PaymentFormScreen(
                     )
                 )
         ) {
+            // Update bagian Column content di PaymentFormScreen.kt:
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -118,6 +162,15 @@ fun PaymentFormScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                // Payment Detail Card - HANYA MUNCUL SAAT EDIT (paymentId != null)
+                if (paymentId != null && payment != null) {
+                    PaymentDetailCard(
+                        payment = payment,
+                        tenants = tenants,
+                        rooms = rooms
+                    )
+                }
+
                 // Header Section
                 ModernFormHeader(isEdit = paymentId != null)
 
@@ -152,44 +205,317 @@ fun PaymentFormScreen(
                     enabled = selectedTenantId.isNotBlank() &&
                             selectedRoomId.isNotBlank() &&
                             bulanTahun.isNotBlank() &&
-                            jumlahBayar.isNotBlank(),
+                            jumlahBayar.isNotBlank() &&
+                            !isSaving, // Tambahkan ini
                     isEdit = payment != null,
+                    isLoading = isSaving, // Tambahkan ini
                     onClick = {
-                        if (payment == null) {
-                            viewModel.addPayment(
-                                tenantId = selectedTenantId,
-                                roomId = selectedRoomId,
-                                bulanTahun = bulanTahun,
-                                jumlahBayar = jumlahBayar.toIntOrNull() ?: 0,
-                                statusPembayaran = statusPembayaran,
-                                denda = denda.toIntOrNull() ?: 0
-                            )
-                        } else {
-                            viewModel.updatePayment(
-                                payment.copy(
-                                    tenantId = selectedTenantId,
-                                    roomId = selectedRoomId,
-                                    bulanTahun = bulanTahun,
-                                    jumlahBayar = jumlahBayar.toIntOrNull() ?: 0,
-                                    statusPembayaran = statusPembayaran,
-                                    denda = denda.toIntOrNull() ?: 0
-                                )
-                            )
-                        }
-
                         scope.launch {
-                            snackbarHostState.showSnackbar(
-                                if (payment == null) "Pembayaran berhasil ditambahkan"
-                                else "Pembayaran berhasil diperbarui"
-                            )
-                        }
+                            try {
+                                isSaving = true
+                                saveSuccess = false
+                                saveError = null
 
-                        navController.navigateUp()
+                                if (payment == null) {
+                                    // Tambah pembayaran baru
+                                    viewModel.addPayment(
+                                        tenantId = selectedTenantId,
+                                        roomId = selectedRoomId,
+                                        bulanTahun = bulanTahun,
+                                        jumlahBayar = jumlahBayar.toIntOrNull() ?: 0,
+                                        statusPembayaran = statusPembayaran,
+                                        denda = denda.toIntOrNull() ?: 0
+                                    )
+                                } else {
+                                    // Update pembayaran
+                                    viewModel.updatePayment(
+                                        payment.copy(
+                                            tenantId = selectedTenantId,
+                                            roomId = selectedRoomId,
+                                            bulanTahun = bulanTahun,
+                                            jumlahBayar = jumlahBayar.toIntOrNull() ?: 0,
+                                            statusPembayaran = statusPembayaran,
+                                            denda = denda.toIntOrNull() ?: 0
+                                        )
+                                    )
+                                }
+
+                                // Simulasi delay untuk UX yang lebih baik
+                                kotlinx.coroutines.delay(1000)
+                                saveSuccess = true
+
+                            } catch (e: Exception) {
+                                saveError = e.message ?: "Terjadi kesalahan"
+                            } finally {
+                                isSaving = false
+                            }
+                        }
                     }
                 )
             }
         }
     }
+
+    if (showSuccessDialog) {
+        ModernSuccessDialog(
+            message = dialogMessage,
+            isEdit = isEditMode,
+            onDismiss = {
+                showSuccessDialog = false
+                saveSuccess = false
+                navController.navigateUp()
+            }
+        )
+    }
+
+    // Error Dialog
+    if (showErrorDialog) {
+        ModernErrorDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showErrorDialog = false
+            },
+            onRetry = {
+                showErrorDialog = false
+            }
+        )
+    }
+}
+
+// Success Dialog Component
+@Composable
+private fun ModernSuccessDialog(
+    message: String,
+    isEdit: Boolean,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Success Icon dengan animasi
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    SuccessColor.copy(alpha = 0.2f),
+                                    SuccessColor.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = SuccessColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = if (isEdit) "Berhasil Diperbarui!" else "Berhasil Disimpan!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AccentColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Detail info
+                Text(
+                    text = if (isEdit) "Data pembayaran telah diperbarui dengan informasi terbaru"
+                    else "Data pembayaran baru telah tersimpan dalam sistem",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SuccessColor,
+                    contentColor = Color.White
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Done,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "OK, Mengerti",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun ModernErrorDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    onRetry: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Error Icon dengan animasi
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    ErrorColor.copy(alpha = 0.2f),
+                                    ErrorColor.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = ErrorColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Ops, Ada Masalah!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = ErrorColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Silakan periksa kembali data yang dimasukkan atau coba lagi",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Tutup button
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = AccentColor
+                    ),
+                    border = BorderStroke(1.dp, AccentColor.copy(alpha = 0.5f))
+                ) {
+                    Text(
+                        text = "Tutup",
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                // Coba Lagi button
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = WarningColor,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Coba Lagi",
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -248,6 +574,208 @@ private fun ModernFormTopBar(
         }
     }
 }
+
+
+@Composable
+private fun PaymentDetailCard(
+    payment: com.example.kostkita_app.domain.model.Payment?,
+    tenants: List<com.example.kostkita_app.domain.model.Tenant>,
+    rooms: List<com.example.kostkita_app.domain.model.Room>
+) {
+    if (payment == null) return
+
+    val tenant = tenants.find { it.id == payment.tenantId }
+    val room = rooms.find { it.id == payment.roomId }
+
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn()
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                SecondaryColor.copy(alpha = 0.1f),
+                                PrimaryColor.copy(alpha = 0.1f)
+                            )
+                        )
+                    )
+                    .padding(24.dp)
+            ) {
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(SecondaryColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Receipt,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Detail Pembayaran",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurfaceColor
+                        )
+                        Text(
+                            text = "ID: ${payment.id.take(8)}...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = AccentColor
+                        )
+                    }
+
+                    // Status Badge
+                    StatusBadge(status = payment.statusPembayaran)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Detail Information
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Tenant & Room Info
+                    DetailRow(
+                        icon = Icons.Default.Person,
+                        label = "Penghuni",
+                        value = tenant?.nama ?: "Tidak diketahui",
+                        subtitle = "Kamar ${room?.nomorKamar ?: "N/A"} - ${room?.tipeKamar ?: "N/A"}"
+                    )
+
+                    // Payment Period
+                    DetailRow(
+                        icon = Icons.Default.CalendarToday,
+                        label = "Periode",
+                        value = payment.bulanTahun,
+                        subtitle = "Tanggal Bayar: ${formatTimestamp(payment.tanggalBayar)}"
+                    )
+
+                    // Amount Details
+                    DetailRow(
+                        icon = Icons.Default.AttachMoney,
+                        label = "Jumlah Bayar",
+                        value = formatCurrency(payment.jumlahBayar),
+                        subtitle = if (payment.denda > 0) "Denda: ${formatCurrency(payment.denda)}" else "Tidak ada denda"
+                    )
+
+                    // Total Amount
+                    if (payment.denda > 0) {
+                        HorizontalDivider(
+                            color = AccentColor.copy(alpha = 0.3f),
+                            thickness = 1.dp
+                        )
+
+                        DetailRow(
+                            icon = Icons.Default.Calculate,
+                            label = "Total Keseluruhan",
+                            value = formatCurrency(payment.jumlahBayar + payment.denda),
+                            subtitle = "Pembayaran + Denda",
+                            isTotal = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusBadge(status: String) {
+    val (backgroundColor, textColor) = when (status.lowercase()) {
+        "lunas" -> SecondaryColor to Color.White
+        "belum lunas" -> ErrorColor to Color.White
+        "pending" -> WarningColor to Color.White
+        else -> AccentColor to Color.White
+    }
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Text(
+            text = status,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+private fun DetailRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    subtitle: String? = null,
+    isTotal: Boolean = false
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isTotal) SecondaryColor else AccentColor,
+            modifier = Modifier.size(20.dp)
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = AccentColor,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = value,
+                style = if (isTotal) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isTotal) FontWeight.Bold else FontWeight.SemiBold,
+                color = if (isTotal) SecondaryColor else OnSurfaceColor
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AccentColor.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun ModernFormHeader(isEdit: Boolean) {
@@ -714,12 +1242,13 @@ private fun ModernPaymentDetails(
 private fun ModernSaveButton(
     enabled: Boolean,
     isEdit: Boolean,
+    isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(800)
+        delay(1000)
         visible = true
     }
 
@@ -729,37 +1258,59 @@ private fun ModernSaveButton(
     ) {
         Button(
             onClick = onClick,
+            enabled = enabled && !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = enabled,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = SecondaryColor,
+                containerColor = if (isEdit) WarningColor else SuccessColor,
+                contentColor = Color.White,
                 disabledContainerColor = AccentColor.copy(alpha = 0.3f)
             ),
             elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 12.dp
+                defaultElevation = if (enabled) 4.dp else 0.dp
             )
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    if (isEdit) Icons.Default.Update else Icons.Default.Save,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = Color.White
-                )
-                Text(
-                    text = if (isEdit) "Perbarui Pembayaran" else "Simpan Pembayaran",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                    Text(
+                        text = if (isEdit) "Memperbarui..." else "Menyimpan...",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Icon(
+                        if (isEdit) Icons.Default.Update else Icons.Default.Save,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = if (isEdit) "📝 Perbarui Pembayaran" else "💾 Simpan Pembayaran",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
+}
+
+// Helper functions - tambahkan di bagian bawah file
+private fun formatCurrency(amount: Int): String {
+    return "Rp ${String.format("%,d", amount).replace(',', '.')}"
+}
+
+private fun formatTimestamp(timestamp: Long): String {
+    val date = java.util.Date(timestamp)
+    val format = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale("id", "ID"))
+    return format.format(date)
 }

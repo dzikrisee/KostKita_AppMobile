@@ -22,6 +22,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    // Railway Production URL
+    private const val BASE_URL = "https://kostkitaapi-production.up.railway.app/api/"
+
+    // Local development URL (uncomment for local testing)
+//     private const val BASE_URL = "http://10.0.2.2:3000/api/"
+
     @Provides
     @Singleton
     fun provideAuthInterceptor(@ApplicationContext context: Context): Interceptor {
@@ -31,7 +37,6 @@ object NetworkModule {
             val token = prefs.getString("auth_token", null)
 
             Log.d("NetworkModule", "Request URL: ${request.url}")
-            Log.d("NetworkModule", "Token from prefs: $token") // Debug token
             Log.d("NetworkModule", "Token available: ${!token.isNullOrEmpty()}")
 
             val newRequest = if (token != null) {
@@ -39,11 +44,13 @@ object NetworkModule {
                 request.newBuilder()
                     .addHeader("Authorization", "Bearer $token")
                     .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
                     .build()
             } else {
                 Log.w("NetworkModule", "No token found, sending request without auth")
                 request.newBuilder()
                     .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
                     .build()
             }
 
@@ -62,14 +69,16 @@ object NetworkModule {
     @Singleton
     @Named("AuthOkHttpClient")
     fun provideAuthOkHttpClient(): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
 
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
 
@@ -77,8 +86,9 @@ object NetworkModule {
     @Singleton
     @Named("ApiOkHttpClient")
     fun provideApiOkHttpClient(authInterceptor: Interceptor): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
 
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
@@ -86,6 +96,7 @@ object NetworkModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
 
@@ -93,7 +104,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(@Named("ApiOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/api/")
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -104,7 +115,7 @@ object NetworkModule {
     @Named("AuthRetrofit")
     fun provideAuthRetrofit(@Named("AuthOkHttpClient") okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:3000/api/")
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
