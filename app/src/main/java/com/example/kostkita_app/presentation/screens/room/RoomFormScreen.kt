@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -19,9 +20,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // Modern Color Palette dari HomeScreen
@@ -32,6 +35,7 @@ private val SurfaceColor = Color(0xFFFAF8F5)
 private val OnSurfaceColor = Color(0xFF3C3C3C)
 private val SuccessColor = Color(0xFF27AE60)
 private val WarningColor = Color(0xFFF39C12)
+private val ErrorColor = Color(0xFFE74C3C)
 private val InfoColor = Color(0xFF3498DB)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,10 +65,39 @@ fun RoomFormScreen(
     var headerVisible by remember { mutableStateOf(false) }
     var formVisible by remember { mutableStateOf(false) }
 
+    // TAMBAHAN: State untuk popup dialog - SAMA SEPERTI PaymentFormScreen
+    var isSaving by remember { mutableStateOf(false) }
+    var saveSuccess by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+    var isEditMode by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         headerVisible = true
         kotlinx.coroutines.delay(200)
         formVisible = true
+    }
+
+    // TAMBAHAN: Handle success/error feedback - SAMA SEPERTI PaymentFormScreen
+    LaunchedEffect(saveSuccess, saveError) {
+        when {
+            saveSuccess -> {
+                isEditMode = room != null
+                dialogMessage = if (room != null) {
+                    "Kamar berhasil diperbarui!"
+                } else {
+                    "Kamar baru berhasil ditambahkan!"
+                }
+                showSuccessDialog = true
+            }
+            saveError != null -> {
+                dialogMessage = saveError ?: "Terjadi kesalahan"
+                showErrorDialog = true
+                saveError = null
+            }
+        }
     }
 
     val tipeKamarOptions = listOf("Standard", "Deluxe", "VIP")
@@ -74,7 +107,7 @@ fun RoomFormScreen(
         containerColor = SurfaceColor,
         topBar = {
             ModernTopBar(
-                title = if (roomId == null) "Tambah Kamar" else "Edit Kamar",
+                title = if (roomId == null) "Tambah Kamar" else "Detail Kamar",
                 onBackClick = { navController.navigateUp() }
             )
         }
@@ -194,24 +227,18 @@ fun RoomFormScreen(
                             )
                         }
 
-                        // Save Button
+                        // Save Button - DIMODIFIKASI UNTUK POPUP
                         ModernSaveButton(
-                            enabled = nomorKamar.isNotBlank() && hargaBulanan.isNotBlank() && lantai.isNotBlank(),
+                            enabled = nomorKamar.isNotBlank() && hargaBulanan.isNotBlank() && lantai.isNotBlank() && !isSaving,
                             isEdit = room != null,
+                            isLoading = isSaving,
                             onClick = {
                                 scope.launch {
-                                    if (room == null) {
-                                        viewModel.addRoom(
-                                            nomorKamar = nomorKamar,
-                                            tipeKamar = tipeKamar,
-                                            hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
-                                            fasilitas = fasilitas,
-                                            statusKamar = statusKamar,
-                                            lantai = lantai.toIntOrNull() ?: 1
-                                        )
-                                    } else {
-                                        viewModel.updateRoom(
-                                            room.copy(
+                                    try {
+                                        isSaving = true
+
+                                        if (room == null) {
+                                            viewModel.addRoom(
                                                 nomorKamar = nomorKamar,
                                                 tipeKamar = tipeKamar,
                                                 hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
@@ -219,9 +246,28 @@ fun RoomFormScreen(
                                                 statusKamar = statusKamar,
                                                 lantai = lantai.toIntOrNull() ?: 1
                                             )
-                                        )
+                                        } else {
+                                            viewModel.updateRoom(
+                                                room.copy(
+                                                    nomorKamar = nomorKamar,
+                                                    tipeKamar = tipeKamar,
+                                                    hargaBulanan = hargaBulanan.toIntOrNull() ?: 0,
+                                                    fasilitas = fasilitas,
+                                                    statusKamar = statusKamar,
+                                                    lantai = lantai.toIntOrNull() ?: 1
+                                                )
+                                            )
+                                        }
+
+                                        // Simulasi delay untuk UX yang lebih baik
+                                        delay(1000)
+                                        saveSuccess = true
+
+                                    } catch (e: Exception) {
+                                        saveError = e.message ?: "Terjadi kesalahan"
+                                    } finally {
+                                        isSaving = false
                                     }
-                                    navController.navigateUp()
                                 }
                             }
                         )
@@ -230,6 +276,140 @@ fun RoomFormScreen(
             }
         }
     }
+
+    // TAMBAHAN: Success Dialog - IDENTIK DENGAN PaymentFormScreen
+    if (showSuccessDialog) {
+        ModernSuccessDialog(
+            message = dialogMessage,
+            isEdit = isEditMode,
+            onDismiss = {
+                showSuccessDialog = false
+                saveSuccess = false
+                navController.navigateUp()
+            }
+        )
+    }
+
+    // TAMBAHAN: Error Dialog - IDENTIK DENGAN PaymentFormScreen
+    if (showErrorDialog) {
+        ModernErrorDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showErrorDialog = false
+            },
+            onRetry = {
+                showErrorDialog = false
+            }
+        )
+    }
+}
+
+// TAMBAHAN: Success Dialog Component - IDENTIK DENGAN PaymentFormScreen
+@Composable
+private fun ModernSuccessDialog(
+    message: String,
+    isEdit: Boolean,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Success Icon dengan animasi
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    SuccessColor.copy(alpha = 0.2f),
+                                    SuccessColor.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = SuccessColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = if (isEdit) "Berhasil Diperbarui!" else "Berhasil Disimpan!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AccentColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Detail info
+                Text(
+                    text = if (isEdit) "Data kamar telah diperbarui dengan informasi terbaru"
+                    else "Data kamar baru telah tersimpan dalam sistem",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SuccessColor,
+                    contentColor = Color.White
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Done,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "OK, Mengerti",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -632,6 +812,7 @@ private fun RoomFormModernDropdownField(
 private fun ModernSaveButton(
     enabled: Boolean,
     isEdit: Boolean,
+    isLoading: Boolean = false,
     onClick: () -> Unit
 ) {
     Button(
@@ -646,20 +827,28 @@ private fun ModernSaveButton(
             disabledContainerColor = AccentColor.copy(alpha = 0.3f)
         )
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                if (isEdit) Icons.Default.Update else Icons.Default.Save,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
             )
-            Text(
-                text = if (isEdit) "Update Kamar" else "Simpan Kamar",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    if (isEdit) Icons.Default.Update else Icons.Default.Save,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = if (isEdit) "Update Kamar" else "Simpan Kamar",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -683,3 +872,108 @@ private fun getStatusColor(status: String): Color {
     }
 }
 
+// TAMBAHAN: Error Dialog Component - IDENTIK DENGAN PaymentFormScreen
+@Composable
+private fun ModernErrorDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    onRetry: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Error Icon
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    ErrorColor.copy(alpha = 0.2f),
+                                    ErrorColor.copy(alpha = 0.1f)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = ErrorColor
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Terjadi Kesalahan",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceColor,
+                    textAlign = TextAlign.Center
+                )
+            }
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = AccentColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Silakan coba lagi atau periksa koneksi internet Anda",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AccentColor.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ErrorColor,
+                    contentColor = Color.White
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Tutup",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+    )
+}

@@ -356,7 +356,7 @@ private fun ModernFilterChip(
 
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         ),
@@ -391,8 +391,8 @@ private fun ModernRoomStats(rooms: List<Room>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp), // Ubah dari 2.dp ke 8.dp
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp), // sama seperti PaymentListScreen
+        horizontalArrangement = Arrangement.spacedBy(8.dp) // kurangi dari 12.dp
     ) {
         val available = rooms.count { it.statusKamar.equals("tersedia", true) }
         val occupied = rooms.count { it.statusKamar.equals("terisi", true) }
@@ -451,23 +451,23 @@ private fun ModernStatCard(
         ) + fadeIn()
     ) {
         Card(
-            modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
+            modifier = modifier.height(60.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp) // tambah spacing
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
                         .background(color.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
@@ -593,11 +593,13 @@ private fun ModernRoomContent(
     tenants: List<Tenant>,
     viewMode: ViewMode,
     onRoomEdit: (Room) -> Unit,
-    onRoomDelete: (Room) -> Unit
+    onRoomDelete: (Room) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     when (viewMode) {
         ViewMode.GRID -> {
             LazyVerticalGrid(
+                modifier = modifier,
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(
                     start = 20.dp,
@@ -622,6 +624,7 @@ private fun ModernRoomContent(
         }
         ViewMode.LIST -> {
             LazyColumn(
+                modifier = modifier,
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     end = 20.dp,

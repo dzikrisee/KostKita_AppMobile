@@ -6,7 +6,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -124,13 +122,14 @@ fun PaymentListScreen(
                 // Payment Stats
                 ModernPaymentStats(payments = payments)
 
-                // Content
+                // Content - TAMBAHKAN WEIGHT DI SINI
                 when {
                     isLoading -> ModernLoadingContent()
                     filteredPayments.isEmpty() -> ModernEmptyPaymentContent(
                         hasSearch = searchQuery.isNotEmpty() || selectedFilter != "Semua"
                     )
                     else -> ModernPaymentContent(
+                        modifier = Modifier.weight(1f), // INI YANG PENTING!
                         payments = filteredPayments,
                         tenants = tenants,
                         rooms = rooms,
@@ -371,8 +370,9 @@ private fun ModernPaymentStats(payments: List<Payment>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .wrapContentHeight()
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val lunas = payments.count { it.statusPembayaran.equals("lunas", true) }
         val belumBayar = payments.count { it.statusPembayaran.equals("belum bayar", true) }
@@ -435,19 +435,19 @@ private fun ModernPaymentStatCard(
         ) + fadeIn()
     ) {
         Card(
-            modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
+            modifier = modifier.height(60.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(8.dp), // ubah dari 16.dp
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -577,13 +577,15 @@ private fun ModernPaymentContent(
     tenants: List<Tenant>,
     rooms: List<Room>,
     onPaymentEdit: (Payment) -> Unit,
-    onPaymentDelete: (Payment) -> Unit
+    onPaymentDelete: (Payment) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
+        modifier = modifier,
         contentPadding = PaddingValues(
             start = 20.dp,
             end = 20.dp,
-            top = 4.dp,
+            top = 0.dp,
             bottom = 100.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
